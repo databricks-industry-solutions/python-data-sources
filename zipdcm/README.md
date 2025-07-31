@@ -17,8 +17,8 @@ git clone https://github.com/databricks-industry-solutions/python-data-sources.g
 
 Create and activate python virtual environment
 ```bash
-pyenv venv python-data-sources, 
-pyenv activate python-data-sources, 
+pyenv venv python-data-sources
+pyenv activate python-data-sources
 ```
 
 Install development dependencies
