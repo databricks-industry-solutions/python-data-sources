@@ -41,7 +41,7 @@ resources:
 
   # Example job workflow - customize based on your notebooks
   jobs:
-    example_workflow:
+    demo_workflow:
       name: "${var.project_name} - Pytest Workflow"
       tasks:
         - task_key: pytest_databricks
