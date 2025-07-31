@@ -2,15 +2,12 @@ import logging
 import sys
 
 import pytest
+from dbx.zip_dcm_ds import RangePartition, ZipDCMDataSource, ZipDCMDataSourceReader
 from pyspark.sql import SparkSession
-
-from zip_dcm_ds import RangePartition, ZipDCMDataSource, ZipDCMDataSourceReader
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    "%(asctime)s - %(filename)s:%(lineno)s - %(levelname)s - %(message)s"
-)
+formatter = logging.Formatter("%(asctime)s - %(filename)s:%(lineno)s - %(levelname)s - %(message)s")
 handler = logging.StreamHandler()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
@@ -60,20 +57,12 @@ def test_wrongpath(spark):
     from pyspark.errors import AnalysisException
 
     with pytest.raises(AnalysisException):
-        df = (
-            spark.read.option("numPartitions", "1")
-            .format("zipdcm")
-            .load("./resources/wrongpath")
-        )
+        df = spark.read.option("numPartitions", "1").format("zipdcm").load("./resources/wrongpath")
         df.collect()
 
 
 def test_dcm(spark):
-    df = (
-        spark.read.option("numPartitions", "1")
-        .format("zipdcm")
-        .load("./resources/dcms/y/1-1.dcm")
-    )
+    df = spark.read.option("numPartitions", "1").format("zipdcm").load("./resources/dcms/y/1-1.dcm")
     result = df.collect()
     assert len(result) == 1
     assert result[0]["path"] == "resources/dcms/y/1-1.dcm"
@@ -105,11 +94,7 @@ def test_single(spark):
 
 
 def test_folder(spark, tmp_path):
-    df = (
-        spark.read.option("numPartitions", "2")
-        .format("zipdcm")
-        .load("./resources/dcms")
-    )
+    df = spark.read.option("numPartitions", "2").format("zipdcm").load("./resources/dcms")
     df.limit(20).show()
 
     assert df.isEmpty() == False
@@ -119,17 +104,11 @@ def test_folder(spark, tmp_path):
 
 
 def test_rowid(spark):
-    df = (
-        spark.read.option("numPartitions", "2")
-        .format("zipdcm")
-        .load("./resources/dcms")
-    )
+    df = spark.read.option("numPartitions", "2").format("zipdcm").load("./resources/dcms")
     df.limit(20).show()
 
     df.registerTempTable("dicoms")
-    assert (
-        spark.sql("""select count(distinct rowid) from dicoms""").collect()[0][0] == 5
-    )
+    assert spark.sql("""select count(distinct rowid) from dicoms""").collect()[0][0] == 5
 
 
 if __name__ == "__main__":

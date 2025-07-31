@@ -95,9 +95,7 @@ def _readzipdcm(
             raise Exception(f"Processing {path} caused exception: {e}")
 
 
-def _path_handler(
-    path: str, pathGlobFilter="*.zip", recursiveFileLookup=True
-) -> list[Path]:
+def _path_handler(path: str, pathGlobFilter="*.zip", recursiveFileLookup=True) -> list[Path]:
     #
     # In this implementation, we validate the path,
     # and get the list of the paths to scan.
@@ -123,9 +121,7 @@ def _path_handler(
         paths = sorted(Path(path).glob(f"**/{pathGlobFilter}"))
     else:
         if not (str(p).lower().endswith(".dcm") or str(p).lower().endswith(".zip")):
-            raise ValueError(
-                f"File {path} does not have an allowed extension (dcm,zip,Zip)"
-            )
+            raise ValueError(f"File {path} does not have an allowed extension (dcm,zip,Zip)")
         paths = [Path(path)]
 
     length = len(paths)
