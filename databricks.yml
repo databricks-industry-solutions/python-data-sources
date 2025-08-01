@@ -30,16 +30,18 @@ resources:
   jobs:
     demo_workflow:
       name: "${var.project_name} - Pytest Workflow"
+      max_concurrent_runs: 4
       tasks:
         - task_key: dbrunner
           notebook_task:
-            notebook_path: /Workspace/Users/douglas.moore@databricks.com/python-data-sources-x/zipdcm/db_runner.py
+            notebook_path: /Workspace/Users/douglas.moore@databricks.com/python-data-sources-x/zipdcm/db_runner
             source: WORKSPACE
           existing_cluster_id: 0519-014005-pr11dvi3
           libraries:
             - pypi:
                 package: pyspark==4.0.0.dev1
       tags:
+        dev: douglas_moore
         owner: douglas.moore@databricks.com
         solacc: pixels
       queue:
@@ -52,5 +54,6 @@ resources:
               - pydicom==3.0.1
               - pytest==8.3.5
       budget_policy_id: d8e5830d-97cb-40b9-bd65-063434295162
+
 
 # For more options and schema, see: https://docs.databricks.com/aws/en/dev-tools/bundles/settings
