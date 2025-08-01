@@ -2,7 +2,7 @@ import logging
 import sys
 
 import pytest
-from zip_dcm_ds import RangePartition, ZipDCMDataSource, ZipDCMDataSourceReader
+from dbx.zip_dcm_ds import RangePartition, ZipDCMDataSource, ZipDCMDataSourceReader
 from pyspark.sql import SparkSession
 
 logger = logging.getLogger(__file__)

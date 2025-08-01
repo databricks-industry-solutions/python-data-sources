@@ -1,7 +1,7 @@
 import logging
 from typing import Iterator, Sequence, Tuple, Union
 
-from zip_dcm_utils import RangePartition, _path_handler, _readzipdcm
+from dbx.zip_dcm_utils import RangePartition, _path_handler, _readzipdcm
 from pyarrow import RecordBatch
 from pyspark.sql.datasource import DataSource, DataSourceReader, InputPartition
 from pyspark.sql.types import StructType
