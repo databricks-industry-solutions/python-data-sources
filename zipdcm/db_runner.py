@@ -26,11 +26,7 @@ WATCH_DOGS_EMAILS = os.environ.get("WATCH_DOGS_EMAILS", "").split(",")
 branch = os.getenv("GITHUB_HEAD_REF", "main")
 
 # Create workspace client using host and token
-workspace = WorkspaceClient(
-    host=os.environ["DATABRICKS_HOST"], 
-    token=os.environ["DATABRICKS_TOKEN"]
-)
-
+workspace = WorkspaceClient()
 user = workspace.current_user.me().user_name
 nodes = [
     node
