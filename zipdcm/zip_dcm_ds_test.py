@@ -93,7 +93,7 @@ def test_rowid(spark):
     df = spark.read.option("numPartitions", "2").format("zipdcm").load("./resources/dcms")
     df.limit(20).show()
 
-    df.registerTempTable("dicoms")
+    df.createOrReplaceTempView("dicoms")
     assert spark.sql("""select count(distinct rowid) from dicoms""").collect()[0][0] == 5
 
 

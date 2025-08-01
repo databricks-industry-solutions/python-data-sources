@@ -1,7 +1,10 @@
 # Databricks notebook source
-import pytest
 import os
 import sys
+from contextlib import redirect_stdout
+from io import StringIO
+
+import pytest
 
 # Run all tests in the connected directory in the remote Databricks workspace.
 # By default, pytest searches through all files with filenames ending with
@@ -20,5 +23,23 @@ sys.dont_write_bytecode = True
 # Now run pytest from the root directory, using the
 
 #
-retcode = pytest.main(["-v", "."])
-dbutils.notebook.exit(f"{retcode}")
+temp_stdout = StringIO()
+temp_stderr = StringIO()
+
+with redirect_stdout(temp_stdout):
+    with redirect_stdout(temp_stderr):  # Redirect stderr as well if needed
+        # Call pytest.main() with any desired arguments
+        # For example, to run tests in the current directory:
+        result = pytest.main(["-v", "."])
+
+# Retrieve the captured output
+stdout_str = temp_stdout.getvalue()
+stderr_str = temp_stderr.getvalue()
+
+print("\n--- Captured stdout ---")
+print(stdout_str)
+
+print("\n--- Captured stderr ---")
+print(stderr_str)
+
+print(f"\nPytest exit code: {result}")
