@@ -39,10 +39,6 @@ resources:
           libraries:
             - pypi:
                 package: pyspark==4.0.0.dev1
-      git_source:
-        git_url: https://github.com/databricks-industry-solutions/python-data-sources.git
-        git_provider: gitHub
-        git_branch: feat/zipdcm
       tags:
         owner: douglas.moore@databricks.com
         solacc: pixels
