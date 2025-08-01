@@ -1,7 +1,6 @@
 import pytest
-#from databricks.connect import DatabricksSession
 from pyspark.sql import SparkSession
-from zip_dcm_ds import ZipDCMDataSource
+from dbx.zip_dcm_ds import ZipDCMDataSource
 
 
 @pytest.fixture(scope="session")
