@@ -2,7 +2,7 @@ import logging
 import sys
 
 import pytest
-from dbx.zip_dcm_ds import RangePartition, ZipDCMDataSource, ZipDCMDataSourceReader
+from zip_dcm_ds import RangePartition, ZipDCMDataSource, ZipDCMDataSourceReader
 from pyspark.sql import SparkSession
 
 logger = logging.getLogger(__file__)
@@ -11,20 +11,6 @@ formatter = logging.Formatter("%(asctime)s - %(filename)s:%(lineno)s - %(levelna
 handler = logging.StreamHandler()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-
-
-@pytest.fixture(scope="session")
-def spark():
-    spark_session = (
-        SparkSession.builder.appName("PySpark DCM Zips Datasource Tester")
-        .master("local[*]")
-        .config("spark.memory.offHeap.enabled", "true")
-        .config("spark.memory.offHeap.size", "1g")
-        .getOrCreate()
-    )
-    spark_session.dataSource.register(ZipDCMDataSource)
-    yield spark_session
-    spark_session.stop()
 
 
 def test_ZipDCMDataSourceReader():

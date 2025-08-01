@@ -1,7 +1,7 @@
 import logging
 
 import pytest
-from dbx.zip_dcm_utils import RangePartition, _path_handler
+from zip_dcm_utils import RangePartition, _path_handler
 
 logger = logging.getLogger(__file__)
 
@@ -31,7 +31,7 @@ def test_path_handler_dcm():
 
 
 def test_readzipdcm_single_zip():
-    from dbx.zip_dcm_utils import _readzipdcm
+    from zip_dcm_utils import _readzipdcm
 
     zip_file_path = "./resources/dcms/y/y.zip"
     part = RangePartition(0, 1)
@@ -42,7 +42,7 @@ def test_readzipdcm_single_zip():
 
 
 def test_readzipdcm_single_dcm():
-    from dbx.zip_dcm_utils import _readzipdcm
+    from zip_dcm_utils import _readzipdcm
 
     zip_file_path = "./resources/dcms/y/1-1.dcm"
     part = RangePartition(0, 1)

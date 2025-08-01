@@ -1,7 +1,7 @@
 import logging
 from typing import Iterator, Sequence, Tuple, Union
 
-from dbx.zip_dcm_utils import RangePartition, _path_handler, _readzipdcm
+from zip_dcm_utils import RangePartition, _path_handler, _readzipdcm
 from pyarrow import RecordBatch
 from pyspark.sql.datasource import DataSource, DataSourceReader, InputPartition
 from pyspark.sql.types import StructType
@@ -92,6 +92,6 @@ class ZipDCMDataSource(DataSource):
 
 
 if __name__ == "__main__":
-    from dbx.zip_dcm_ds_test import test_ZipDCMDataSourceReader
+    from zip_dcm_ds_test import test_ZipDCMDataSourceReader
 
     test_ZipDCMDataSourceReader()
