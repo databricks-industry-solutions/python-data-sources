@@ -1,0 +1,3 @@
+pydicom==3.0.1
+pyspark==4.0.0.dev1
+pyspark-data-sources==0.1.8
