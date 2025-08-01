@@ -17,17 +17,18 @@ from databricks.sdk.service.jobs import (
 
 WATCH_DOGS_EMAILS = os.environ.get("WATCH_DOGS_EMAILS", "").split(",")
 
-config = configparser.ConfigParser()
-config.read_file(io.StringIO(os.environ["DB_PROFILES"]))
-config = config["DEMO"]
-
-os.environ["DATABRICKS_HOST"] = config["host"]
-os.environ["DATABRICKS_TOKEN"] = config["token"]
+#config = configparser.ConfigParser()
+#config.read_file(io.StringIO(os.environ["DB_PROFILES"]))
+#config = config["DEMO"]
+#os.environ["DATABRICKS_HOST"] = config["host"]
+#os.environ["DATABRICKS_TOKEN"] = config["token"]
 
 branch = os.getenv("GITHUB_HEAD_REF", "main")
+
 # Create workspace client using host and token
 workspace = WorkspaceClient(
-    host=os.environ["DATABRICKS_HOST"], token=os.environ["DATABRICKS_TOKEN"]
+    host=os.environ["DATABRICKS_HOST"], 
+    token=os.environ["DATABRICKS_TOKEN"]
 )
 
 user = workspace.current_user.me().user_name
@@ -53,7 +54,7 @@ for watcher in WATCH_DOGS_EMAILS:
             )
         )
 
-repo_url = "https://github.com/databricks-industry-solutions/pixels.git"
+repo_url = "https://github.com/databricks-industry-solutions/python-data-sources.git"
 
 # Define the git source
 git_source = GitSource(git_url=repo_url, git_provider=GitProvider.GIT_HUB, git_branch=branch)
@@ -61,7 +62,7 @@ git_source = GitSource(git_url=repo_url, git_provider=GitProvider.GIT_HUB, git_b
 # Define the job cluster
 cluster_spec = ClusterSpec(
     num_workers=0,
-    spark_version="14.3.x-scala2.12",
+    spark_version="17.0.x-scala2.13",
     node_type_id=nodes[0].node_type_id,
     spark_conf={"spark.master": "local[*, 4]"},
     data_security_mode=DataSecurityMode.SINGLE_USER,
