@@ -32,8 +32,9 @@ resources:
       name: "${var.project_name} - Pytest Workflow"
       tasks:
         - task_key: dbrunner
-          spark_python_task:
-            python_file: /Workspace/Users/douglas.moore@databricks.com/python-data-sources-x/zipdcm/db_runner.py
+          notebook_task:
+            notebook_path: /Workspace/Users/douglas.moore@databricks.com/python-data-sources-x/zipdcm/db_runner.py
+            source: WORKSPACE
           existing_cluster_id: 0519-014005-pr11dvi3
           libraries:
             - pypi:
