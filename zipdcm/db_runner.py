@@ -21,4 +21,4 @@ sys.dont_write_bytecode = True
 
 #
 retcode = pytest.main(["-v", "."])
-dbutils.notebook.exit(retcode)
+dbutils.notebook.exit(f"{retcode}")
