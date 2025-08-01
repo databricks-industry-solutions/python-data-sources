@@ -1,12 +1,24 @@
-
+# Databricks notebook source
 import pytest
-import sys
 import os
+import sys
 
+# Run all tests in the connected directory in the remote Databricks workspace.
+# By default, pytest searches through all files with filenames ending with
+# "_test.py" for tests. Within each of these files, pytest runs each function
+# with a function name beginning with "test_".
+
+# Get the path to the directory for this file in the workspace.
+dir_root = os.path.abspath(".")
+print(dir_root)
+# Switch to the root directory.
+os.chdir(dir_root)
+
+# Skip writing .pyc files to the bytecode cache on the cluster.
 sys.dont_write_bytecode = True
 
-print( os.path.abspath('.') )
+# Now run pytest from the root directory, using the
 
-result = pytest.main(['-vvv', '--import-mode=importlib', '.'])
-if result != 0:
-    raise Exception(f"Tests failed with exit code: {result}")
+#
+retcode = pytest.main(["-v", "."])
+dbutils.notebook.exit(f"{retcode}")

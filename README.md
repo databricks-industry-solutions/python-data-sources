@@ -1,4 +1,5 @@
-# Databricks Solution Accelerator Template - MODIFY THIS README.md
+# Databricks Python Data Sources
+Introduced in Spark 4.x, Python datasources allow you to create Spark Data Sources leveraging long standing python libraries for handling unique file types or specialized interfaces with spark read, readStream, write and writeStream APIs.
 
 [![Databricks](https://img.shields.io/badge/Databricks-Solution_Accelerator-FF3621?style=for-the-badge&logo=databricks)](https://databricks.com)
 [![Unity Catalog](https://img.shields.io/badge/Unity_Catalog-Enabled-00A1C9?style=for-the-badge)](https://docs.databricks.com/en/data-governance/unity-catalog/index.html)
@@ -33,6 +34,7 @@
 
 &copy; 2025 Databricks, Inc. All rights reserved. The source in this project is provided subject to the Databricks License [https://databricks.com/db-license-source]. All included or referenced third party libraries are subject to the licenses set forth below.
 
-| Package | License | Copyright |
-|---------|---------|-----------|
-| | | |
+| Package | Purpose | License | Source |
+|---------|---------|---------|---|
+| | | | | |
+| pydicom	| Python api for DICOM files |	MIT	| https://github.com/pydicom/pydicom|
