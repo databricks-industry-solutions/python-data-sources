@@ -25,65 +25,35 @@ targets:
 
 # Customize the resources below based on your solution accelerator needs
 resources:
-  # Uncomment and customize if you have Databricks Apps
-  # apps:
-  #   your_app:
-  #     name: "your-app-name"
-  #     description: "Your app description"
-  #     source_code_path: "/Users/${workspace.current_user.userName}/${var.project_name}-${var.environment}/files/apps/your_app"
-
-  # Uncomment and customize if you have dashboards
-  # dashboards:
-  #   your_dashboard:
-  #     display_name: "Your Dashboard"
-  #     file_path: "./dashboards/your_dashboard.lvdash.json"
-  #     warehouse_id: "${var.warehouse_id}"
 
   # Example job workflow - customize based on your notebooks
   jobs:
     demo_workflow:
       name: "${var.project_name} - Pytest Workflow"
       tasks:
-        - task_key: pytest_databricks
-          notebook_task:
-            notebook_path: "./zipdcm/pytest_databricks.py"
-
-# Example resources you can uncomment and customize:
-# resources:
-#   apps:
-#     your_app:
-#       name: "your-app-name"
-#       description: "Your app description"
-#       source_code_path: "./apps/your_app"
-#
-#   jobs:
-#     your_workflow:
-#       name: "Your Workflow Name"
-#       tasks:
-#         - task_key: first_task
-#           notebook_task:
-#             notebook_path: "./notebooks/your_first_notebook.ipynb"
-#         - task_key: second_task
-#           depends_on:
-#             - task_key: first_task
-#           notebook_task:
-#             notebook_path: "./notebooks/your_second_notebook.ipynb"
-#
-#   pipelines:
-#     your_pipeline:
-#       name: "Your Pipeline"
-#       storage: "/Shared/your-pipeline"
-#       configuration:
-#         your_config: "value"
-#
-#   models:
-#     your_model:
-#       name: "Your Model"
-#       model_path: "models/your_model"
-#
-#   dashboards:
-#     your_dashboard:
-#       display_name: "Your Dashboard"
-#       file_path: "./dashboards/your_dashboard.lvdash.json"
+        - task_key: dbrunner
+          spark_python_task:
+            python_file: /Workspace/Users/douglas.moore@databricks.com/python-data-sources-x/zipdcm/db_runner.py
+          existing_cluster_id: 0519-014005-pr11dvi3
+          libraries:
+            - pypi:
+                package: pyspark==4.0.0.dev1
+      git_source:
+        git_url: https://github.com/databricks-industry-solutions/python-data-sources.git
+        git_provider: gitHub
+        git_branch: feat/zipdcm
+      tags:
+        owner: douglas.moore@databricks.com
+        solacc: pixels
+      queue:
+        enabled: true
+      environments:
+        - environment_key: zipdcm_pytest_environment
+          spec:
+            client: "3"
+            dependencies:
+              - pydicom==3.0.1
+              - pytest==8.3.5
+      budget_policy_id: d8e5830d-97cb-40b9-bd65-063434295162
 
 # For more options and schema, see: https://docs.databricks.com/aws/en/dev-tools/bundles/settings
