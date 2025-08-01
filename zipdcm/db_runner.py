@@ -1,4 +1,17 @@
 # Databricks notebook source
+# MAGIC %sh 
+# MAGIC make -f Makefile clean
+
+# COMMAND ----------
+
+# MAGIC %pip install -r requirements-dev.txt
+
+# COMMAND ----------
+
+dbutils.library.restartPython()
+
+# COMMAND ----------
+
 import os
 import sys
 from contextlib import redirect_stdout
@@ -30,7 +43,8 @@ with redirect_stdout(temp_stdout):
     with redirect_stdout(temp_stderr):  # Redirect stderr as well if needed
         # Call pytest.main() with any desired arguments
         # For example, to run tests in the current directory:
-        result = pytest.main(["-v", "."])
+        sys.dont_write_bytecode = True
+        result = pytest.main(["-v", "-p", "no:cacheprovider", "test"])
 
 # Retrieve the captured output
 stdout_str = temp_stdout.getvalue()
