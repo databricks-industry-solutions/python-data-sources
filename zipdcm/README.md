@@ -1,16 +1,21 @@
 
+![Zipped DiCOMS](../media/zip-dcm-blue.png)
 ## Introduction
 Read DICOM file metadata from a zip file archive.
 
 ```python
-df = spark.read.format("zipdcm").load(...)
-```
+from dbx.zip_dcm_ds import ZipDCMDataSource
+spark.dataSource.register(ZipDCMDataSource)
 
+df = spark.read.format("zipdcm").load("./resources")
+df.display()
+```
+For more, see our [demo]($./demo) notebook.
 
 ## Install
 
 
-Download
+Create a git folder in Databricks or Download
 ```bash
 git clone https://github.com/databricks-industry-solutions/python-data-sources.git 
 ```
@@ -22,7 +27,9 @@ pyenv activate python-data-sources
 ```
 
 Install development dependencies
+
 ```bash
+cd zipdcm
 make dev
 ```
 
