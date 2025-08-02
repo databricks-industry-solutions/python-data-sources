@@ -12,6 +12,7 @@ clean:
 	rm -rf spark_warehouse
 
 test:
+	export PYTHONPATH=`pwd`
 	pytest .
 
 dev:
