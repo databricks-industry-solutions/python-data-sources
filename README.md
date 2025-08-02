@@ -4,6 +4,9 @@
 [![Serverless](https://img.shields.io/badge/Serverless-Compute-00C851?style=for-the-badge)](https://docs.databricks.com/en/compute/serverless.html)
 # Databricks Python Data Sources
 Introduced in Spark 4.x, Python Data Source API allows you to create PySpark Data Sources leveraging long standing python libraries for handling unique file types or specialized interfaces with spark read, readStream, write and writeStream APIs.
+| Data Source Name | Purpose |
+| --- | --- |
+| [zipdcm](zipdcm/README.md) | Read DICOM files from Zip file archives |
 
 ## Documentation
 Refer to the [python-data-sources](https://databricks-industry-solutions.github.io/python-data-sources/) documentation for detailed information on how to use supplied python data sources, its features, and configuration options.
