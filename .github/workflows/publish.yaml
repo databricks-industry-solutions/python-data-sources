@@ -40,7 +40,7 @@ jobs:
           mkdir -p site
           
           # Convert .ipynb notebooks to HTML fragments (body content only)
-          for notebook in notebooks/*.ipynb; do
+          for notebook in */*.ipynb; do
               if [ -f "$notebook" ]; then
                   jupyter nbconvert "$notebook" --to html \
                     --template classic --HTMLExporter.theme=light \
