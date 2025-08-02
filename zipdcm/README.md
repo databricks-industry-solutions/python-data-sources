@@ -7,7 +7,8 @@ Read DICOM file metadata from a zip file archive.
 from dbx.zip_dcm_ds import ZipDCMDataSource
 spark.dataSource.register(ZipDCMDataSource)
 
-df = spark.read.format("zipdcm").load("./resources")
+# read DCMs with `numPartitions` parallelism.
+df = spark.read.format("zipdcm").option('numPartitions',4).load("./resources")
 df.display()
 ```
 For more, see our [demo]($./demo) notebook.
