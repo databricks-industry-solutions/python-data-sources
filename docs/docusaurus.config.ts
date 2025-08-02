@@ -18,7 +18,7 @@ const config: Config = {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'databricks-industry-solutions', // Usually your GitHub org/user name.
-  projectName: 'python-data_sources', // Usually your repo name.
+  projectName: 'python-data-sources', // Usually your repo name.
   deploymentBranch: 'gh-pages',
 
   onBrokenLinks: 'throw',
