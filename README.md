@@ -30,11 +30,10 @@ Introduced in Spark 4.x, Python Data Source API allows you to create PySpark Dat
 3. Contribute to repositories with pull requests (PRs), ensuring that you always have a second-party review from a capable teammate
 
 
-## 📄 Third-Party Package Licenses - FILL IN WITH YOUR PROJECT'S OPEN SOURCE PACKAGES + LICENSING
+## 📄 Third-Party Package Licenses
 
 &copy; 2025 Databricks, Inc. All rights reserved. The source in this project is provided subject to the Databricks License [https://databricks.com/db-license-source]. All included or referenced third party libraries are subject to the licenses set forth below.
 
 | Package | Purpose | License | Source |
-|---------|---------|---------|---|
-| | | | | |
-| pydicom	| Python api for DICOM files |	MIT	| https://github.com/pydicom/pydicom|
+|---------|---------|---------|--------|
+| pydicom	| Python api for DICOM files |	MIT	| https://github.com/pydicom/pydicom |
