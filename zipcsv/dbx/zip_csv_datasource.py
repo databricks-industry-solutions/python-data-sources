@@ -1,33 +1,37 @@
 import logging
+import os
 from pathlib import Path
 from typing import Iterable, List
 
 from pyspark.sql.datasource import DataSource, DataSourceReader, InputPartition
 from pyspark.sql.types import StructType
 
-import os
-import logging
 
 class PackagePathFilter(logging.Filter):
     def filter(self, record):
-        record.pathname = record.pathname.replace(os.getcwd(),"")
+        record.pathname = record.pathname.replace(os.getcwd(), "")
         return True
+
 
 logger = logging.getLogger(__file__)
 handler = logging.StreamHandler()
 
 handler.addFilter(PackagePathFilter())
-formatter = logging.Formatter('%(levelname)s\t%(process)d: [%(filename)s:%(lineno)s - %(funcName)15s() ] %(message)s')
+formatter = logging.Formatter(
+    "%(levelname)s\t%(process)d: [%(filename)s:%(lineno)s - %(funcName)15s() ] %(message)s"
+)
 
 handler.setFormatter(formatter)
 if not logger.hasHandlers():
     logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
+
 class RangePartition(InputPartition):
     def __init__(self, start, end):
         self.start = start
         self.end = end
+
 
 class ZipDataSourceReader(DataSourceReader):
 
@@ -40,14 +44,14 @@ class ZipDataSourceReader(DataSourceReader):
 
     def partitions(self):
         logger.debug(f"partitions(numPartitions={self.numPartitions}):")
-        return [RangePartition(0, 1000) for i in range(self.numPartitions)]      
+        return [RangePartition(0, 1000) for i in range(self.numPartitions)]
 
     def read(self, partition):
         # Library imports must be within the read method.
         from zipfile import ZipFile
 
         logger.debug(partition)
-        #try:
+        # try:
         p = Path(self.path)
         if not p.exists():
             logger.warning(f"Path '{p.name}' does not exist.")
@@ -61,15 +65,19 @@ class ZipDataSourceReader(DataSourceReader):
                     for name in zipFile.namelist():
                         with zipFile.open(name, "r") as zipfile:
                             for line in zipfile:
-                                yield [f"{file}", f"{name}", line.decode('utf-8').strip()]
+                                yield [
+                                    f"{file}",
+                                    f"{name}",
+                                    line.decode("utf-8").strip(),
+                                ]
         else:
             # single zip file
             with ZipFile(p, "r") as zipFile:
                 for name in zipFile.namelist():
                     with zipFile.open(name, "r") as zipfile:
                         for line in zipfile:
-                            yield [f"{p}", f"{name}", line.decode('utf-8').strip()]
-        #except Exception as e:
+                            yield [f"{p}", f"{name}", line.decode("utf-8").strip()]
+        # except Exception as e:
         #    logger.error(e)
 
 
