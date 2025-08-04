@@ -5,10 +5,6 @@ from typing import Iterable, List
 from pyspark.sql.datasource import DataSource, DataSourceReader, InputPartition
 from pyspark.sql.types import StructType
 
-import logging
-import os
-import sys
-
 import os
 import logging
 
@@ -20,9 +16,8 @@ class PackagePathFilter(logging.Filter):
 logger = logging.getLogger(__file__)
 handler = logging.StreamHandler()
 
-#formatter = logging.Formatter('%(asctime)s [%(pathname)s] %(message)s')
 handler.addFilter(PackagePathFilter())
-formatter = logging.Formatter('%(levelname)s\t[%(filename)s:%(lineno)s - %(funcName)15s() ] %(message)s')
+formatter = logging.Formatter('%(levelname)s\t%(process)d: [%(filename)s:%(lineno)s - %(funcName)15s() ] %(message)s')
 
 handler.setFormatter(formatter)
 if not logger.hasHandlers():
@@ -34,21 +29,21 @@ class RangePartition(InputPartition):
         self.start = start
         self.end = end
 
-
 class ZipDataSourceReader(DataSourceReader):
 
     def __init__(self, schema, options):
-        self.schema: StructType = schema
+        self.schema = schema
         self.options = options
         self.path = self.options.get("path", None)
         self.numPartitions = int(self.options.get("numPartitions", 2))
         logger.debug(options)
 
     def partitions(self):
+        logger.debug(f"partitions(numPartitions={self.numPartitions}):")
         return [RangePartition(0, 1000) for i in range(self.numPartitions)]      
 
     def read(self, partition):
-        # Library imports must be within the method.
+        # Library imports must be within the read method.
         from zipfile import ZipFile
 
         logger.debug(partition)
@@ -73,7 +68,7 @@ class ZipDataSourceReader(DataSourceReader):
                 for name in zipFile.namelist():
                     with zipFile.open(name, "r") as zipfile:
                         for line in zipfile:
-                            yield [f"{p.name}", f"{name}", line.decode('utf-8').strip()]
+                            yield [f"{p}", f"{name}", line.decode('utf-8').strip()]
         #except Exception as e:
         #    logger.error(e)
 
