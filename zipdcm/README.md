@@ -8,10 +8,10 @@ from dbx.zip_dcm_ds import ZipDCMDataSource
 spark.dataSource.register(ZipDCMDataSource)
 
 # read DCMs with `numPartitions` parallelism.
-df = spark.read.format("zipdcm").option('numPartitions',4).load("./resources")
+df = spark.read.format("zipdcm").option("numPartitions",4).load("./resources")
 df.display()
 ```
-For more, see our [demo]($./demo) notebook.
+For more, see our [demo](./zip-dicom-demo.ipynb) notebook.
 
 ## Install
 
