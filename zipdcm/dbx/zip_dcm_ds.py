@@ -32,9 +32,7 @@ class ZipDCMDataSourceReader(DataSourceReader):
         self.recursiveFileLookup = bool(self.options.get("recursiveFileLookup", "false"))
         self.numPartitions = int(self.options.get("numPartitions", DEFUALT_numPartitions))
         self.deep = False
-        self.dicom_keys_filter = self.options.get("dicomKeysFilter", DEFAULT_dicomKeysFilter).split(
-            ","
-        )
+        self.dicom_keys_filter = self.options.get("dicomKeysFilter", DEFAULT_dicomKeysFilter).split(",")
         assert self.path is not None
         self.paths = _path_handler(self.path, self.pathGlobFilter)
 
@@ -43,9 +41,7 @@ class ZipDCMDataSourceReader(DataSourceReader):
         Compute 'splits' of the data to read
             self.paths is the list of files discovered and now need to be partitioned.
         """
-        logger.debug(
-            f"ZipDCMDataSourceReader.partitions({self.numPartitions}, {self.path}, paths: {self.paths}): "
-        )
+        logger.debug(f"ZipDCMDataSourceReader.partitions({self.numPartitions}, {self.path}, paths: {self.paths}): ")
         length = len(self.paths)
         partitions = []
         partition_size_max = int(max(1, length / self.numPartitions))

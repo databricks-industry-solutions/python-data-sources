@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %sh 
+# MAGIC %sh
 # MAGIC make -f Makefile clean
 
 # COMMAND ----------

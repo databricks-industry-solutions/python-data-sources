@@ -10,8 +10,8 @@ def spark() -> SparkSession:
     the cluster in the remote Databricks workspace. Unit tests do not
     have access to this SparkSession by default.
     """
-    #sparkSession = DatabricksSession.builder.serverless(True).getOrCreate()
-    sparkSession = (SparkSession.builder.getOrCreate())
+    # sparkSession = DatabricksSession.builder.serverless(True).getOrCreate()
+    sparkSession = SparkSession.builder.getOrCreate()
     sparkSession.dataSource.register(ZipDCMDataSource)
     return sparkSession
 

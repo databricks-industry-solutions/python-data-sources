@@ -2,8 +2,7 @@ import logging
 import sys
 
 import pytest
-from dbx.zip_dcm_ds import RangePartition, ZipDCMDataSource, ZipDCMDataSourceReader
-from pyspark.sql import SparkSession
+from dbx.zip_dcm_ds import ZipDCMDataSourceReader
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
@@ -31,11 +30,7 @@ def test_wrongfile(spark):
     from pyspark.errors import AnalysisException
 
     with pytest.raises(AnalysisException):
-        df = (
-            spark.read.option("numPartitions", "1")
-            .format("zipdcm")
-            .load("./resources/wrongpath.zip")
-        )
+        df = spark.read.option("numPartitions", "1").format("zipdcm").load("./resources/wrongpath.zip")
         result = df.collect()
 
 

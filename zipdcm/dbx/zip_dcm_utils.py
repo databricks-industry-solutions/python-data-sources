@@ -18,9 +18,7 @@ class RangePartition(InputPartition):
         self.end = end
 
 
-def _readzipdcm(
-    partition: RangePartition, paths: list, dicom_keys_filter: list[str]
-) -> Iterator[List[Any]]:
+def _readzipdcm(partition: RangePartition, paths: list, dicom_keys_filter: list[str]) -> Iterator[List[Any]]:
     """
     Generator function to extract DICOM metadata from .dcm files within ZIP archives.
 
