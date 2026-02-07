@@ -11,9 +11,9 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      changed-submodules: ${{ steps.detect.outputs.changed-directories }}
+      submodules: ${{ steps.check.outputs.submodules }}
       has-changes: ${{ steps.check.outputs.has-changes }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,28 +35,32 @@ jobs:
         run: |
           CHANGED='${{ steps.detect.outputs.changed-directories }}'
           echo "Changed directories: $CHANGED"
-          
-          # Check if any of our submodules are in the changed list
-          HAS_MCAP=$(echo "$CHANGED" | jq 'map(select(contains("mcap"))) | length > 0')
-          HAS_MQTT=$(echo "$CHANGED" | jq 'map(select(contains("mqtt"))) | length > 0')
-          HAS_ZIPDCM=$(echo "$CHANGED" | jq 'map(select(contains("zipdcm"))) | length > 0')
-          
-          # Build the list of submodules to test
-          SUBMODULES="[]"
-          if [ "$HAS_MCAP" = "true" ]; then
-            SUBMODULES=$(echo "$SUBMODULES" | jq '. + ["mcap"]')
+
+          # Extract unique submodule names from paths like:
+          # - src/python_data_sources/<submodule>
+          # - tests/<submodule>
+          SUBMODULES=$(echo "$CHANGED" | jq -r '
+            [.[] |
+              # Extract from src/python_data_sources/<submodule>
+              (capture("src/python_data_sources/(?<name>[^/]+)") | .name),
+              # Extract from tests/<submodule>
+              (capture("tests/(?<name>[^/]+)") | .name)
+            ] |
+            # Remove nulls and get unique values
+            map(select(. != null)) |
+            unique |
+            # Filter out common files (conftest, etc.)
+            map(select(. != "conftest.py" and . != "__pycache__"))
+          ')
+
+          if [ -z "$SUBMODULES" ] || [ "$SUBMODULES" = "null" ] || [ "$SUBMODULES" = "[]" ]; then
+            SUBMODULES="[]"
           fi
-          if [ "$HAS_MQTT" = "true" ]; then
-            SUBMODULES=$(echo "$SUBMODULES" | jq '. + ["mqtt"]')
-          fi
-          if [ "$HAS_ZIPDCM" = "true" ]; then
-            SUBMODULES=$(echo "$SUBMODULES" | jq '. + ["zipdcm"]')
-          fi
-          
-          echo "Submodules to test: $SUBMODULES"
-          echo "submodules=$SUBMODULES" >> $GITHUB_OUTPUT
-          
-          if [ "$SUBMODULES" = "[]" ]; then
+
+          COMPACT_SUBMODULES=$(echo "$SUBMODULES" | jq -c '.')
+          echo "submodules=$COMPACT_SUBMODULES" >> $GITHUB_OUTPUT
+
+          if [ "$COMPACT_SUBMODULES" = "[]" ]; then
             echo "has-changes=false" >> $GITHUB_OUTPUT
           else
             echo "has-changes=true" >> $GITHUB_OUTPUT
@@ -72,13 +76,13 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.has-changes == 'true'
     runs-on: ubuntu-latest
-    
+
     strategy:
       fail-fast: false
       matrix:
-        submodule: ${{ fromJSON(needs.detect-changes.outputs.changed-submodules) }}
+        submodule: ${{ fromJSON(needs.detect-changes.outputs.submodules) }}
         python-version: ['3.11', '3.12']
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -93,39 +97,21 @@ jobs:
           pip install --upgrade pip
           pip install hatch
 
-      - name: Determine submodule from path
-        id: submodule
+      - name: Run tests for ${{ matrix.submodule }}
         run: |
-          # Extract the submodule name from the changed directory path
-          DIR="${{ matrix.submodule }}"
-          if [[ "$DIR" == *"mcap"* ]]; then
-            echo "name=mcap" >> $GITHUB_OUTPUT
-          elif [[ "$DIR" == *"mqtt"* ]]; then
-            echo "name=mqtt" >> $GITHUB_OUTPUT
-          elif [[ "$DIR" == *"zipdcm"* ]]; then
-            echo "name=zipdcm" >> $GITHUB_OUTPUT
-          else
-            echo "name=unknown" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Run tests for ${{ steps.submodule.outputs.name }}
-        if: steps.submodule.outputs.name != 'unknown'
-        run: |
-          echo "Running tests for ${{ steps.submodule.outputs.name }}"
-          hatch run test-${{ steps.submodule.outputs.name }}:test
+          echo "Running tests for ${{ matrix.submodule }}"
+          hatch run test-${{ matrix.submodule }}:test
 
   test-all:
     needs: detect-changes
-    if: |
-      contains(needs.detect-changes.outputs.changed-submodules, 'src/python_data_sources') ||
-      github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    
+
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.11', '3.12']
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -142,13 +128,12 @@ jobs:
 
       - name: Run all tests
         run: |
-          # Run tests for each submodule
           echo "Running MCAP tests..."
           hatch run test-mcap:test || true
-          
+
           echo "Running MQTT tests..."
           hatch run test-mqtt:test || true
-          
+
           echo "Running ZipDCM tests..."
           hatch run test-zipdcm:test || true
 
@@ -156,13 +141,14 @@ jobs:
     needs: [detect-changes, test, test-all]
     if: always()
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Check test results
         run: |
           echo "Test workflow completed"
           echo "Changes detected: ${{ needs.detect-changes.outputs.has-changes }}"
-          
+          echo "Submodules tested: ${{ needs.detect-changes.outputs.submodules }}"
+
           if [ "${{ needs.test.result }}" = "failure" ] || [ "${{ needs.test-all.result }}" = "failure" ]; then
             echo "Some tests failed!"
             exit 1
