@@ -9,7 +9,7 @@ from pyspark.sql import SparkSession
 from python_data_sources.zipdcm import ZipDCMDataSource
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def spark() -> SparkSession:
     """Create a SparkSession with ZipDCM data source registered."""
     spark_session = SparkSession.builder.getOrCreate()

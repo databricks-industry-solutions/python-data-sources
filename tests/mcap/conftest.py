@@ -9,7 +9,7 @@ from pyspark.sql import SparkSession
 from python_data_sources.mcap import MCAPDataSource
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def spark() -> SparkSession:
     """
     Create a SparkSession with MCAP data source registered.
