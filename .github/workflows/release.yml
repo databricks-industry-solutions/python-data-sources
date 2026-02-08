@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          cache: 'pip'
+          cache-dependency-path: '**/pyproject.toml'
+          python-version: '3.11'
+      - name: Build wheels
+        run: |
+          pip install hatch==1.15.0
+          hatch build
+      - name: GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/python_data_sources-*.whl
+            dist/python_data_sources-*.tar.gz
+      - name: Publish distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Sign artifacts with Sigstore
+        uses: sigstore/gh-action-sigstore-python@v3.0.0
+        with:
+          inputs: |
+            dist/python_data_sources-*.whl
+            dist/python_data_sources-*.tar.gz
+          release-signing-artifacts: true
