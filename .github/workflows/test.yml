@@ -8,6 +8,7 @@ on:
       - main
 
 jobs:
+  # NOTE: Detects newly created or modified data sources
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
@@ -72,6 +73,7 @@ jobs:
           echo "Submodules to test: ${{ steps.check.outputs.submodules }}"
           echo "Has changes: ${{ steps.check.outputs.has-changes }}"
 
+  # NOTE: Runs tests of the created or modified data sources; Tests of unmodified data sources are skipped for convenience
   test:
     needs: detect-changes
     if: needs.detect-changes.outputs.has-changes == 'true'
@@ -102,6 +104,7 @@ jobs:
           echo "Running tests for ${{ matrix.submodule }}"
           hatch run test-${{ matrix.submodule }}:test
 
+  # NOTE: Runs all tests on push to the main branch
   test-all:
     needs: detect-changes
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

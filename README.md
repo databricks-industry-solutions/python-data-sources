@@ -132,12 +132,7 @@ Refer to the [python-data-sources](https://databricks-industry-solutions.github.
 
 ## Contributing
 
-1. **git clone** this project locally
-2. Install development dependencies: `pip install hatch`
-3. Run tests to verify setup: `hatch run test-all:test`
-4. Make your changes
-5. Run tests for affected submodules
-6. Contribute with pull requests (PRs), ensuring that you always have a second-party review from a capable teammate
+See [CONTRIBUTING.md](https://github.com/databricks-industry-solutions/python-data-sources/blob/main/CONTRIBUTING.md) for detailed information about contributing to the Python Data Sources library.
 
 
 ## 📄 Third-Party Package Licenses
