@@ -8,6 +8,19 @@ on:
       - main
 
 jobs:
+  # NOTE: Ensures code is properly formatted
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Format all files
+        run: make dev fmt
+
+      - name: Fail on differences
+        run: git diff --exit-code
+
   # NOTE: Detects newly created or modified data sources
   detect-changes:
     runs-on: ubuntu-latest
@@ -45,7 +58,7 @@ jobs:
               # Extract from src/python_data_sources/<submodule>
               (capture("src/python_data_sources/(?<name>[^/]+)") | .name),
               # Extract from tests/<submodule>
-              (capture("tests/(?<name>[^/]+)") | .name)
+              (capture("tests/unit/(?<name>[^/]+)") | .name)
             ] |
             # Remove nulls and get unique values
             map(select(. != null)) |
@@ -159,6 +172,7 @@ jobs:
             echo "All tests passed!"
           fi
 
+  # NOTE: Tests any example notebooks in '/examples' by running them in a test workspace; Will not be run from forks (e.g. from external contributors)
   e2e:
     if: github.event_name == 'pull_request' && !github.event.pull_request.draft && !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
@@ -183,7 +197,7 @@ jobs:
       - name: Run e2e Tests
         run: |
           echo "Running e2d tests..."
-          hatch run pytest tests/e2e -v
+          hatch run test-all:e2e
         env:
           REF_NAME: ${{ github.ref_name }}
           TEST_CLASSIC_CLUSTER_ID: ${{ secrets.TEST_CLASSIC_CLUSTER_ID }}

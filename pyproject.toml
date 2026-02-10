@@ -74,7 +74,8 @@ path = ".venv"
 dependencies = [
     "black~=24.8.0",
     "databricks-labs-pylint~=0.5",
-    "databricks-sdk",
+    "databricks-labs-pytester~=0.7.4",
+    "databricks-sdk~=0.73",
     "mcap>=1.3.0",
     "mcap-protobuf-support>=0.5.3",
     "paho-mqtt>=2.1.0",
@@ -112,8 +113,8 @@ dependencies = [
 ]
 
 [tool.hatch.envs.test-mcap.scripts]
-test = "pytest tests/mcap -v {args}"
-cov = "pytest tests/mcap --cov=src/python_data_sources/mcap --cov-report=term-missing {args}"
+test = "pytest tests/unit/mcap -v {args}"
+cov = "pytest tests/unit/mcap --cov=src/python_data_sources/mcap --cov-report=term-missing {args}"
 
 # MQTT test environment
 [tool.hatch.envs.test-mqtt]
@@ -127,8 +128,8 @@ dependencies = [
 ]
 
 [tool.hatch.envs.test-mqtt.scripts]
-test = "pytest tests/mqtt -v {args}"
-cov = "pytest tests/mqtt --cov=src/python_data_sources/mqtt --cov-report=term-missing {args}"
+test = "pytest tests/unit/mqtt -v {args}"
+cov = "pytest tests/unit/mqtt --cov=src/python_data_sources/mqtt --cov-report=term-missing {args}"
 
 # ZipDCM test environment
 [tool.hatch.envs.test-zipdcm]
@@ -144,13 +145,15 @@ dependencies = [
 ]
 
 [tool.hatch.envs.test-zipdcm.scripts]
-test = "pytest tests/zipdcm -v {args}"
-cov = "pytest tests/zipdcm --cov=src/python_data_sources/zipdcm --cov-report=term-missing {args}"
+test = "pytest tests/unit/zipdcm -v {args}"
+cov = "pytest tests/unit/zipdcm --cov=src/python_data_sources/zipdcm --cov-report=term-missing {args}"
 
 # All tests environment
 [tool.hatch.envs.test-all]
 features = ["all"]
 dependencies = [
+    "databricks-labs-pytester~=0.7.4",
+    "databricks-sdk~=0.73",
     "pytest>=8.0.0",
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.10.0",
@@ -159,8 +162,9 @@ dependencies = [
 ]
 
 [tool.hatch.envs.test-all.scripts]
-test = "pytest tests -v {args}"
-cov = "pytest tests --cov=src/python_data_sources --cov-report=term-missing {args}"
+test = "pytest tests/unit -v {args}"
+cov = "pytest tests/unit --cov=src/python_data_sources --cov-report=term-missing {args}"
+e2e = "pytest tests/e2e -v"
 
 # =============================================================================
 # Tool configurations

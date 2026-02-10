@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from databricks.sdk.service.workspace import ImportFormat
 from databricks.sdk.service.jobs import NotebookTask
-from tests.conftest import validate_run_status, TEST_CATALOG
+from tests.e2e.conftest import validate_run_status, TEST_CATALOG
 
 logger = logging.getLogger(__name__)
 
