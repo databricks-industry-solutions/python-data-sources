@@ -42,13 +42,13 @@ pip install python-data-sources[all]
 
 ```python
 from pyspark.sql import SparkSession
-from python_data_sources.mcap import MCAPDataSource
+from src.python_data_sources.mcap import MCAPDataSource
 
 spark = SparkSession.builder.getOrCreate()
 spark.dataSource.register(MCAPDataSource)
 
-df = spark.read.format("mcap") \
-    .option("path", "/path/to/data.mcap") \
+df = spark.read.format("mcap")
+    .option("path", "/path/to/data.mcap")
     .load()
 ```
 
