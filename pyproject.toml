@@ -60,7 +60,10 @@ Repository = "https://github.com/databricks-industry-solutions/python-data-sourc
 Issues = "https://github.com/databricks-industry-solutions/python-data-sources/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/python_data_sources"]
+packages = ["src"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = "python_data_sources"
 
 [tool.hatch.build.targets.sdist]
 include = [
