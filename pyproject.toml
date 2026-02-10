@@ -38,6 +38,7 @@ mqtt = [
 zipdcm = [
     "pydicom>=3.0.1",
     "pylibjpeg[all]>=2.0.1",
+    "numpy>=2.1.3",
 ]
 all = [
     "python-data-sources[mcap]",

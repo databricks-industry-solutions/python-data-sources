@@ -16,7 +16,7 @@ df = (
 )
 df.display()
 ```
-For more, see our [demo](./zip-dicom-demo.ipynb) notebook.
+For more, see our [demo](../examples/zipdcm/zip-dicom-demo.ipynb) notebook.
 
 ## Install
 
