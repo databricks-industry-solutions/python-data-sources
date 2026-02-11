@@ -12,12 +12,14 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.parametrize("test_compute_cluster_type", ["classic", "serverless"])
 def test_run_zipdcm_demo_notebook(
-    ws, library_ref, make_notebook, make_schema, make_job, test_compute_cluster, test_compute_cluster_type
+    ws, library_ref, make_notebook, make_directory, make_schema, make_job, test_compute_cluster, test_compute_cluster_type
 ):
-    path = Path(__file__).parent.parent.parent / "examples" / "zipdcm" / "zip-dicom-demo.ipynb"
+    directory = make_directory(path=Path(__file__).parent.parent.parent / "examples" / "zipdcm").as_fuse().as_posix()
+    path = directory / "zip-dicom-demo.ipynb"
     with open(path, "rb") as f:
         notebook = make_notebook(content=f, format=ImportFormat.JUPYTER)
-        directory = notebook.as_fuse().parent.as_posix()
+
+        
 
     catalog = TEST_CATALOG
     schema = make_schema(catalog=catalog).name

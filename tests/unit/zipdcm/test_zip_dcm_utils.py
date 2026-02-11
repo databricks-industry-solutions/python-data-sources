@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def test_path_handler_wrong_folder():
     """Test that wrong folder raises FileNotFoundError."""
     with pytest.raises(FileNotFoundError):
-        _path_handler("./resources/wrongfolder")
+        _path_handler("../../../resources/wrongfolder")
 
 
 def test_path_handler_zip(resources_dir: Path):
