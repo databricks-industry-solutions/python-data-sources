@@ -43,6 +43,8 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+          verbose: true
+          print-hash: true
       - name: Test installation from TestPyPI
         run: |
           # Wait for TestPyPI to index the package:
