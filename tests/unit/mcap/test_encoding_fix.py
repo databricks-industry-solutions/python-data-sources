@@ -5,7 +5,7 @@ This test verifies that the MCAP data source handles MCAP files
 with missing encoding metadata without crashing.
 """
 
-from python_data_sources.mcap import decode_fallback
+from python_data_sources.mcap.mcap_datasource import decode_fallback
 
 
 def test_fallback_decoder():

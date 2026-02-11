@@ -8,7 +8,7 @@ discovers MCAP files in subdirectories.
 import tempfile
 from pathlib import Path
 
-from python_data_sources.mcap import _path_handler
+from python_data_sources.mcap.mcap_datasource import _path_handler
 
 
 def test_non_recursive_lookup():

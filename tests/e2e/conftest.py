@@ -30,7 +30,7 @@ def library_ref() -> str:
 def test_compute_cluster(cluster_type: str) -> Callable[[str], str | None]:
     def _test_compute_cluster(_cluster_type: str = cluster_type) -> str | None:
         if cluster_type == "classic":
-            return os.getenv("TEST_CLASSIC_CLUSTER_ID")
+            return os.getenv("DATABRICKS_CLUSTER_ID")
         if cluster_type == "serverless":
             return None
         raise ValueError(f"Invalid cluster type: {cluster_type}")

@@ -6,7 +6,7 @@ import pytest
 from pathlib import Path
 from pyspark.sql import SparkSession
 
-from python_data_sources.mcap import MCAPDataSource
+from python_data_sources.mcap.mcap_datasource import MCAPDataSource
 
 
 @pytest.fixture(scope="session")
