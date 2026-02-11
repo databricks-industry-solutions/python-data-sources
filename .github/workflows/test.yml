@@ -197,6 +197,9 @@ jobs:
       - name: Run e2e Tests
         run: |
           echo "Running e2d tests..."
+          echo "Databricks host: $DATABRICKS_HOST"
+          echo "Databricks cluster ID: $DATABRICKS_CLUSTER_ID"
+          echo "Databricks client ID: $DATABRICKS_CLIENT_ID"
           hatch run test-all:e2e
         env:
           REF_NAME: ${{ github.ref_name }}

@@ -15,9 +15,10 @@ TEST_CATALOG = "gh_catalog_001"
 
 @pytest.fixture
 def debug_env_name():
-    # Return None to skip loading from file and use environment variables only
-    # Set DATABRICKS_HOST, DATABRICKS_TOKEN (or DATABRICKS_CLIENT_ID/SECRET) in your environment
-    return None
+    # This tells pytester which debug env file to look for (e.g., ~/.databricks/debug/ws.env)
+    # BUT if DATABRICKS_HOST and auth env vars are set, pytester uses those instead.
+    # The file is only a fallback for local development.
+    return "ws"
 
 
 @pytest.fixture
