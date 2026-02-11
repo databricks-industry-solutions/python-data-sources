@@ -15,7 +15,9 @@ TEST_CATALOG = "gh_catalog_001"
 
 @pytest.fixture
 def debug_env_name():
-    return "ws"
+    # Return None to skip loading from file and use environment variables only
+    # Set DATABRICKS_HOST, DATABRICKS_TOKEN (or DATABRICKS_CLIENT_ID/SECRET) in your environment
+    return None
 
 
 @pytest.fixture
