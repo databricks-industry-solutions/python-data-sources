@@ -1,6 +1,5 @@
 import logging
 import os
-from collections.abc import Callable
 
 import pytest
 from databricks.sdk import WorkspaceClient
@@ -30,15 +29,8 @@ def library_ref() -> str:
 
 
 @pytest.fixture
-def test_compute_cluster(cluster_type: str) -> Callable[[str], str | None]:
-    def _test_compute_cluster(_cluster_type: str = cluster_type) -> str | None:
-        if cluster_type == "classic":
-            return os.getenv("DATABRICKS_CLUSTER_ID")
-        if cluster_type == "serverless":
-            return None
-        raise ValueError(f"Invalid cluster type: {cluster_type}")
-
-    return _test_compute_cluster
+def test_compute_cluster() -> str:
+    return os.getenv("DATABRICKS_CLUSTER_ID")
 
 
 def validate_run_status(run: Run, client: WorkspaceClient) -> None:
