@@ -46,7 +46,10 @@ def test_run_zipdcm_demo_notebook(
             "test_library_ref": library_ref,
         },
     )
-    job = make_job(tasks=[Task(task_key="run_zipdcm_demo_notebook", notebook_task=notebook_task)])
+    job = make_job(
+        tasks=[Task(task_key="run_zipdcm_demo_notebook", notebook_task=notebook_task)],
+        environments=[{"environment_key": "serverless_environment_v4", "spec": {"environment_version": "4"}}],
+    )
 
     waiter = ws.jobs.run_now_and_wait(job.job_id)
     run = ws.jobs.wait_get_run_job_terminated_or_skipped(
