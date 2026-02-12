@@ -64,8 +64,5 @@ def upload_directory_recursive(ws: WorkspaceClient, local_path: Path, target_pat
             upload_directory_recursive(ws, item, dest_path)
             continue
 
-        with open(item, "rb") as f:
-            content = f.read()
-
-        ws.workspace.upload(str(dest_path), content)
+        ws.files.upload_from(dest_path.as_posix(), local_path.as_posix())
         logger.info(f"Uploaded file: {item.name} -> {dest_path}")
