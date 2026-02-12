@@ -7,7 +7,7 @@ name = "python-data-sources"
 version = "0.1.0"
 description = "A collection of custom PySpark data source connectors for various formats"
 readme = "README.md"
-license = "Apache-2.0"
+license-files = { paths = ["LICENSE", "NOTICE"] }
 requires-python = ">=3.11"
 authors = [
     { name = "Databricks Industry Solutions", email = "industry-solutions@databricks.com" },
