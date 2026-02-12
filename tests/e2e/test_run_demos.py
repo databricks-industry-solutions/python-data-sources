@@ -2,9 +2,8 @@ import logging
 from datetime import timedelta
 from pathlib import Path
 
-from databricks.sdk.version import __version__ as DATABRICKS_SDK_VERSION
 from databricks.sdk.service.workspace import ImportFormat
-from databricks.sdk.service.jobs import NotebookTask
+from databricks.sdk.service.jobs import NotebookTask, Task
 from tests.e2e.conftest import validate_run_status, upload_directory_recursive, TEST_CATALOG
 
 logger = logging.getLogger(__name__)
@@ -19,7 +18,6 @@ def test_run_zipdcm_demo_notebook(
     make_volume,
     make_job,
 ):
-    logger.info(f"Using Databricks SDK version: '{DATABRICKS_SDK_VERSION}'")
     local_example_dir = Path(__file__).parent.parent.parent / "examples" / "zipdcm"
     local_notebook_path = local_example_dir / "zip-dicom-demo.ipynb"
     local_resources_path = local_example_dir / "resources"
@@ -48,7 +46,7 @@ def test_run_zipdcm_demo_notebook(
             "test_library_ref": library_ref,
         },
     )
-    job = make_job(tasks=[notebook_task])
+    job = make_job(tasks=[Task(task_key="run_zipdcm_demo_notebook", notebook_task=notebook_task)])
 
     waiter = ws.jobs.run_now_and_wait(job.job_id)
     run = ws.jobs.wait_get_run_job_terminated_or_skipped(
