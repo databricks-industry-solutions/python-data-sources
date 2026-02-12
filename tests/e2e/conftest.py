@@ -61,8 +61,7 @@ def upload_directory_recursive(ws: WorkspaceClient, local_path: Path, target_pat
         dest_path = target_path / item.name
 
         if item.is_dir():
-            directory_path = local_path / item.name
-            upload_directory_recursive(ws, directory_path, dest_path)
+            upload_directory_recursive(ws, item, dest_path)
         else:
-            ws.files.upload_from(dest_path.as_posix(), local_path.as_posix())
+            ws.files.upload_from(dest_path.as_posix(), item.as_posix())
             logger.info(f"Uploaded file: {item.name} -> {dest_path}")
