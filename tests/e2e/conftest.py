@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 from databricks.labs.blueprint.logger import install_logger
-from databricks.labs.blueprint.paths import WorkspacePath
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.jobs import Run, TerminationTypeType
 
@@ -49,20 +48,17 @@ def validate_run_status(run: Run, client: WorkspaceClient) -> None:
     )
 
 
-def upload_directory_recursive(ws: WorkspaceClient, local_path: Path, workspace_path: WorkspacePath) -> None:
+def upload_directory_recursive(ws: WorkspaceClient, local_path: Path, target_path: Path) -> None:
     """
     Recursively uploads a local directory and its contents to a Databricks workspace directory.
 
     Args:
         ws: `WorkspaceClient` instance
         local_path: `Path` object pointing to the directory to upload
-        workspace_path: `WorkspacePath` object pointing to the destination in workspace
+        target_path: `Path` object pointing to the destination in the workspace or a UC volume
     """
-    workspace_path.mkdir(exist_ok=True)
-    logger.info(f"Created directory: {workspace_path}")
-
     for item in local_path.iterdir():
-        dest_path = workspace_path / item.name
+        dest_path = target_path / item.name
 
         if item.is_dir():
             upload_directory_recursive(ws, item, dest_path)

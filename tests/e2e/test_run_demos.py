@@ -2,7 +2,7 @@ import logging
 from datetime import timedelta
 from pathlib import Path
 
-from databricks.labs.blueprint.paths import WorkspacePath
+from databricks.sdk.version import __version__ as DATABRICKS_SDK_VERSION
 from databricks.sdk.service.workspace import ImportFormat
 from databricks.sdk.service.jobs import NotebookTask
 from tests.e2e.conftest import validate_run_status, upload_directory_recursive, TEST_CATALOG
@@ -16,31 +16,35 @@ def test_run_zipdcm_demo_notebook(
     make_notebook,
     make_directory,
     make_schema,
+    make_volume,
     make_job,
 ):
+    logger.info(f"Using Databricks SDK version: '{DATABRICKS_SDK_VERSION}'")
     local_example_dir = Path(__file__).parent.parent.parent / "examples" / "zipdcm"
     local_notebook_path = local_example_dir / "zip-dicom-demo.ipynb"
     local_resources_path = local_example_dir / "resources"
 
     workspace_dir = make_directory()
-    logger.info(f"Created workspace directory: {workspace_dir}")
+    logger.info(f"Created workspace directory: '{workspace_dir}'")
 
     with open(local_notebook_path, "rb") as f:
         notebook = make_notebook(path=workspace_dir / "zip-dicom-demo", content=f, format=ImportFormat.JUPYTER)
-    logger.info(f"Uploaded notebook: {notebook}")
-
-    resources_workspace_path = WorkspacePath(ws, workspace_dir / "resources")
-    upload_directory_recursive(ws, local_resources_path, resources_workspace_path)
-    logger.info(f"Uploaded resources to: {resources_workspace_path}")
+    logger.info(f"Uploaded notebook: '{notebook}'")
 
     catalog = TEST_CATALOG
     schema = make_schema(catalog_name=catalog).name
+    volume = make_volume(catalog_name=catalog, schema_name=schema).name
+
+    resources_path = Path("/Volumes") / catalog / schema / volume / "resources"
+    upload_directory_recursive(ws, local_resources_path, resources_path)
+    logger.info(f"Uploaded resources to: '{resources_path}'")
 
     notebook_task = NotebookTask(
         notebook_path=notebook.as_fuse().as_posix(),
         base_parameters={
             "catalog": catalog,
             "schema": schema,
+            "volume": volume,
             "test_library_ref": library_ref,
         },
     )
