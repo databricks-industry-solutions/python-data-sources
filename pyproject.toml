@@ -165,7 +165,7 @@ dependencies = [
 [tool.hatch.envs.test-all.scripts]
 test = "pytest tests/unit -v {args}"
 cov = "pytest tests/unit --cov=src/python_data_sources --cov-report=term-missing {args}"
-e2e = "pytest tests/e2e -v"
+e2e = "pytest tests/e2e -rs"
 
 # =============================================================================
 # Tool configurations
