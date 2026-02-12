@@ -16,7 +16,6 @@ def test_run_zipdcm_demo_notebook(
     make_directory,
     make_schema,
     make_job,
-    test_compute_cluster,
 ):
     directory = make_directory(path=Path(__file__).parent.parent.parent / "examples" / "zipdcm").as_fuse().as_posix()
     path = directory / "zip-dicom-demo.ipynb"
@@ -36,7 +35,7 @@ def test_run_zipdcm_demo_notebook(
             "test_library_ref": library_ref,
         },
     )
-    job = make_job(tasks=[notebook_task], existing_cluster_id=test_compute_cluster)
+    job = make_job(tasks=[notebook_task])
 
     waiter = ws.jobs.run_now_and_wait(job.job_id)
     run = ws.jobs.wait_get_run_job_terminated_or_skipped(

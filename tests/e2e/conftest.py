@@ -26,11 +26,6 @@ def library_ref() -> str:
     return test_library_ref
 
 
-@pytest.fixture
-def test_compute_cluster() -> str:
-    return os.getenv("DATABRICKS_CLUSTER_ID")
-
-
 def validate_run_status(run: Run, client: WorkspaceClient) -> None:
     """
     Validates that a job task run completed successfully.
