@@ -10,7 +10,7 @@ install_logger()
 logger = logging.getLogger(__name__)
 logging.getLogger("tests").setLevel(logging.DEBUG)
 logging.getLogger("databricks_industry_solutions.python_data_sources").setLevel(logging.DEBUG)
-TEST_CATALOG = "gh_catalog_001"
+TEST_CATALOG = "main"
 
 
 @pytest.fixture
