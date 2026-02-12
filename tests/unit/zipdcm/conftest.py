@@ -19,8 +19,8 @@ def spark() -> SparkSession:
 
 @pytest.fixture
 def resources_dir() -> Path:
-    """Path to the test resources directory."""
-    return Path(__file__).parent / "resources"
+    """Path to the test resources directory (shared with examples)."""
+    return Path(__file__).parent.parent.parent.parent / "examples" / "zipdcm" / "resources"
 
 
 @pytest.fixture(scope="session", autouse=True)

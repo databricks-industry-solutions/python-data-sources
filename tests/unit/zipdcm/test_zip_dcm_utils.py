@@ -12,10 +12,11 @@ from python_data_sources.zipdcm.zip_dcm_utils import RangePartition, _path_handl
 logger = logging.getLogger(__name__)
 
 
-def test_path_handler_wrong_folder():
+def test_path_handler_wrong_folder(resources_dir: Path):
     """Test that wrong folder raises FileNotFoundError."""
+    wrong_path = resources_dir / "wrongfolder_that_does_not_exist"
     with pytest.raises(FileNotFoundError):
-        _path_handler("../../../resources/wrongfolder")
+        _path_handler(str(wrong_path))
 
 
 def test_path_handler_zip(resources_dir: Path):

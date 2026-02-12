@@ -32,21 +32,23 @@ def test_ZipDCMDataSourceReader(resources_dir: Path):
         logger.debug([_ for _ in results])
 
 
-def test_wrongfile(spark: SparkSession):
+def test_wrongfile(spark: SparkSession, resources_dir: Path):
     """Test that wrong file path raises an exception."""
     from pyspark.errors import AnalysisException
 
+    wrong_path = resources_dir / "wrongpath_that_does_not_exist.zip"
     with pytest.raises(AnalysisException):
-        df = spark.read.option("numPartitions", "1").format("zipdcm").load("./resources/wrongpath.zip")
+        df = spark.read.option("numPartitions", "1").format("zipdcm").load(str(wrong_path))
         df.collect()
 
 
-def test_wrongpath(spark: SparkSession):
+def test_wrongpath(spark: SparkSession, resources_dir: Path):
     """Test that wrong directory path raises an exception."""
     from pyspark.errors import AnalysisException
 
+    wrong_path = resources_dir / "wrongpath_that_does_not_exist"
     with pytest.raises(AnalysisException):
-        df = spark.read.option("numPartitions", "1").format("zipdcm").load("./resources/wrongpath")
+        df = spark.read.option("numPartitions", "1").format("zipdcm").load(str(wrong_path))
         df.collect()
 
 
