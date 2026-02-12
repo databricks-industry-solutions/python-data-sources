@@ -73,6 +73,7 @@ path = ".venv"
 
 dependencies = [
     "black~=24.8.0",
+    "databricks-labs-blueprint>=0.9.1,<0.10",
     "databricks-labs-pylint~=0.5",
     "databricks-labs-pytester~=0.7.4",
     "databricks-sdk~=0.73",
