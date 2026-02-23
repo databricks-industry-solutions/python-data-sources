@@ -110,7 +110,7 @@ jobs:
       - name: Install Hatch
         run: |
           pip install --upgrade pip
-          pip install hatch
+          pip install hatch<2.0
 
       - name: Run tests for ${{ matrix.submodule }}
         run: |
@@ -140,7 +140,7 @@ jobs:
       - name: Install Hatch
         run: |
           pip install --upgrade pip
-          pip install hatch
+          pip install hatch<2.0
 
       - name: Run all tests
         run: |
@@ -192,7 +192,7 @@ jobs:
       - name: Install Hatch
         run: |
           pip install --upgrade pip
-          pip install hatch
+          pip install hatch<2.0
 
       - name: Run e2e Tests
         run: |

@@ -23,7 +23,7 @@ jobs:
           python-version: '3.12'
       - name: Build wheels
         run: |
-          pip install hatch==1.15.0
+          pip install hatch<2.0
           hatch build
       - name: GitHub release
         uses: softprops/action-gh-release@v2
