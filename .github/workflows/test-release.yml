@@ -27,17 +27,15 @@ jobs:
       - name: Generate dev version
         id: version
         run: |
-          # Create a new version for TestPyPI:
-          BASE_VERSION=$(grep 'version = ' pyproject.toml | head -1 | cut -d'"' -f2)
+          BASE_VERSION=$(grep '^version = ' pyproject.toml | head -1 | cut -d'"' -f2)
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           DEV_VERSION="${BASE_VERSION}.dev${TIMESTAMP}"
           echo "version=$DEV_VERSION" >> $GITHUB_OUTPUT
           echo "Generated version: $DEV_VERSION"
-          # Update the version in pyproject.toml:
           sed -i "s/version = \"${BASE_VERSION}\"/version = \"${DEV_VERSION}\"/" pyproject.toml
       - name: Build wheels
         run: |
-          pip install hatch<2.0
+          pip install hatch==1.15.0
           hatch build
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -47,11 +45,8 @@ jobs:
           print-hash: true
       - name: Test installation from TestPyPI
         run: |
-          # Wait for TestPyPI to index the package:
-          sleep 120
-          # Install the package from TestPyPI:
+          sleep 180
           pip install --index-url https://test.pypi.org/simple/ \
               --extra-index-url https://pypi.org/simple/ \
               python-data-sources==${{ steps.version.outputs.version }}
-          # Test the import of the package:
           python -c "import python_data_sources; print('Import successful!')"
