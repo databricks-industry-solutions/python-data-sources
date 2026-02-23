@@ -8,7 +8,6 @@ clean:
 	pip install hatch
 	hatch env create
 	hatch run pip install ".[all]"
-	touch .venv/bin/python
 
 dev: .venv/bin/python
 	@hatch run which python
