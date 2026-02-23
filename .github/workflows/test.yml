@@ -96,7 +96,7 @@ jobs:
       fail-fast: false
       matrix:
         submodule: ${{ fromJSON(needs.detect-changes.outputs.submodules) }}
-        python-version: ['3.11', '3.12']
+        python-version: ['3.12']
 
     steps:
       - name: Checkout code
@@ -126,7 +126,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.12']
+        python-version: ['3.12']
 
     steps:
       - name: Checkout code
@@ -187,7 +187,7 @@ jobs:
         with:
           cache: 'pip'
           cache-dependency-path: '**/pyproject.toml'
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install Hatch
         run: |

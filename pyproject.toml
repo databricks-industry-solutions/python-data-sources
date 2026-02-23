@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "A collection of custom PySpark data source connectors for various formats"
 readme = "README.md"
 license-files = { paths = ["LICENSE", "NOTICE"] }
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 authors = [
     { name = "Databricks Industry Solutions", email = "industry-solutions@databricks.com" },
 ]
@@ -17,8 +17,9 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
 ]
 dependencies = [
@@ -67,7 +68,7 @@ packages = ["src/python_data_sources"]
 # =============================================================================
 
 [tool.hatch.envs.default]
-python = "3.11"
+python = "3.12"
 
 path = ".venv"
 
@@ -179,14 +180,14 @@ pythonpath = ["src"]
 testpaths = ["tests"]
 
 [tool.black]
-target-version = ["py311"]
+target-version = ["py312"]
 line-length = 120
 skip-string-normalization = true
 extend-exclude = 'apps|dashboards|docs|mcap|media|mqtt|scripts|zipdcm'
 
 [tool.ruff]
 cache-dir = ".venv/ruff-cache"
-target-version = "py311"
+target-version = "py312"
 line-length = 120
 exclude = ["apps/*", "dashboards/*", "docs/*", "mcap/*", "media/*", "mqtt/*", "scripts/*", "zipdcm/*"]
 
