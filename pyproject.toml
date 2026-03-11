@@ -92,7 +92,6 @@ dependencies = [
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.10.0",
     "ruff~=0.3.4",
-    "virtualenv<21",
 ]
 
 [tool.hatch.envs.default.scripts]

@@ -35,7 +35,7 @@ jobs:
           sed -i "s/version = \"${BASE_VERSION}\"/version = \"${DEV_VERSION}\"/" pyproject.toml
       - name: Build wheels
         run: |
-          pip install hatch==1.15.0
+          pip install hatch
           hatch build
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
