@@ -7,7 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from python_data_sources.zipdcm.zip_dcm_utils import RangePartition, _path_handler, _readzipdcm
+from python_data_sources.zipdcm.zip_dcm_utils import path_handler, readzipdcm
+from python_data_sources.common.range_partition import RangePartition
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +18,7 @@ def test_path_handler_wrong_folder(resources_dir: Path):
     """Test that wrong folder raises FileNotFoundError."""
     wrong_path = resources_dir / "wrongfolder_that_does_not_exist"
     with pytest.raises(FileNotFoundError):
-        _path_handler(str(wrong_path))
+        path_handler(str(wrong_path))
 
 
 def test_path_handler_zip(resources_dir: Path):
@@ -26,7 +28,7 @@ def test_path_handler_zip(resources_dir: Path):
     if not zip_path.exists():
         pytest.skip(f"Test file not found: {zip_path}")
 
-    paths = _path_handler(str(zip_path))
+    paths = path_handler(str(zip_path))
     assert paths is not None
     assert len(paths) == 1
 
@@ -38,7 +40,7 @@ def test_path_handler_folder(resources_dir: Path):
     if not dcms_path.exists():
         pytest.skip(f"Test directory not found: {dcms_path}")
 
-    paths = _path_handler(str(dcms_path))
+    paths = path_handler(str(dcms_path))
     assert paths is not None
     assert len(paths) == 5
 
@@ -50,7 +52,7 @@ def test_path_handler_dcm(resources_dir: Path):
     if not dcm_path.exists():
         pytest.skip(f"Test file not found: {dcm_path}")
 
-    paths = _path_handler(str(dcm_path))
+    paths = path_handler(str(dcm_path))
     assert len(paths) == 1
 
 
@@ -65,7 +67,7 @@ def test_readzipdcm_single_zip(resources_dir: Path):
     paths = [str(zip_path)]
     dicom_keys_filter: list[str] = []
 
-    res = list(_readzipdcm(part, paths, dicom_keys_filter))
+    res = list(readzipdcm(part, paths, dicom_keys_filter))
     logger.debug(res)
     assert len(res) >= 0
 
@@ -81,5 +83,5 @@ def test_readzipdcm_single_dcm(resources_dir: Path):
     paths = [str(dcm_path)]
     dicom_keys_filter: list[str] = []
 
-    res = list(_readzipdcm(part, paths, dicom_keys_filter))
+    res = list(readzipdcm(part, paths, dicom_keys_filter))
     assert len(res) == 1

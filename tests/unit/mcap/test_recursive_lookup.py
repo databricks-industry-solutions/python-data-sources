@@ -8,7 +8,7 @@ discovers MCAP files in subdirectories.
 import tempfile
 from pathlib import Path
 
-from python_data_sources.mcap.mcap_datasource import _path_handler
+from python_data_sources.mcap.mcap_datasource import path_handler
 
 
 def test_non_recursive_lookup():
@@ -23,7 +23,7 @@ def test_non_recursive_lookup():
         subdir.mkdir()
         (subdir / "file2.mcap").touch()
 
-        files = _path_handler(str(tmppath), "*.mcap", recursive=False)
+        files = path_handler(str(tmppath), "*.mcap", recursive=False)
 
         assert len(files) == 1, f"Expected 1 file, found {len(files)}"
         assert "file1.mcap" in files[0], "Should find file1.mcap"
@@ -54,7 +54,7 @@ def test_recursive_lookup():
         (tmppath / "readme.txt").touch()
         (subdir1 / "data.json").touch()
 
-        files = _path_handler(str(tmppath), "*.mcap", recursive=True)
+        files = path_handler(str(tmppath), "*.mcap", recursive=True)
 
         assert len(files) == 4, f"Expected 4 files, found {len(files)}"
 
@@ -77,7 +77,7 @@ def test_single_file_path():
         test_file = tmppath / "test.mcap"
         test_file.touch()
 
-        files = _path_handler(str(test_file), "*.mcap", recursive=False)
+        files = path_handler(str(test_file), "*.mcap", recursive=False)
 
         assert len(files) == 1, "Should return single file"
         assert "test.mcap" in files[0], "Should return correct file"
@@ -97,7 +97,7 @@ def test_subdirectory_recursive():
         subdir2.mkdir()
         (subdir2 / "file3.mcap").touch()
 
-        files = _path_handler(str(subdir1), "*.mcap", recursive=True)
+        files = path_handler(str(subdir1), "*.mcap", recursive=True)
 
         assert len(files) == 2, f"Expected 2 files, found {len(files)}"
         file_names = [Path(f).name for f in files]

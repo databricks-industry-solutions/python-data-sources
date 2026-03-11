@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 
 import pytest
+from pyspark.errors import AnalysisException
 from pyspark.sql import SparkSession
 
 from python_data_sources.zipdcm import ZipDCMDataSourceReader
@@ -25,17 +26,15 @@ def test_ZipDCMDataSourceReader(resources_dir: Path):
         options={"path": zip_file_path, "numPartitions": 32},
     )
     partitions = reader.partitions()
-    logger.debug([_ for _ in partitions])
+    logger.debug(list(partitions))
 
     for part in partitions:
         results = reader.read(part)
-        logger.debug([_ for _ in results])
+        logger.debug(list(results))
 
 
 def test_wrongfile(spark: SparkSession, resources_dir: Path):
     """Test that wrong file path raises an exception."""
-    from pyspark.errors import AnalysisException
-
     wrong_path = resources_dir / "wrongpath_that_does_not_exist.zip"
     with pytest.raises(AnalysisException):
         df = spark.read.option("numPartitions", "1").format("zipdcm").load(str(wrong_path))
@@ -44,8 +43,6 @@ def test_wrongfile(spark: SparkSession, resources_dir: Path):
 
 def test_wrongpath(spark: SparkSession, resources_dir: Path):
     """Test that wrong directory path raises an exception."""
-    from pyspark.errors import AnalysisException
-
     wrong_path = resources_dir / "wrongpath_that_does_not_exist"
     with pytest.raises(AnalysisException):
         df = spark.read.option("numPartitions", "1").format("zipdcm").load(str(wrong_path))
@@ -103,7 +100,7 @@ def test_folder(spark: SparkSession, resources_dir: Path, tmp_path):
         pytest.skip(f"Test directory not found: {dcms_path}")
 
     df = spark.read.option("numPartitions", "2").format("zipdcm").load(str(dcms_path))
-    df.limit(20).show()
+    logger.debug(df.limit(20).collect())
 
     assert not df.isEmpty()
     save_path = tmp_path / "saves"
@@ -119,7 +116,7 @@ def test_rowid(spark: SparkSession, resources_dir: Path):
         pytest.skip(f"Test directory not found: {dcms_path}")
 
     df = spark.read.option("numPartitions", "2").format("zipdcm").load(str(dcms_path))
-    df.limit(20).show()
+    logger.debug(df.limit(20).collect())
 
     df.createOrReplaceTempView("dicoms")
     distinct_count = spark.sql("select count(distinct rowid) from dicoms").collect()[0][0]

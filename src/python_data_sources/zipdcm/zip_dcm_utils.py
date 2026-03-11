@@ -1,24 +1,18 @@
 import logging
+import hashlib
+from zipfile import ZipFile
+from collections.abc import Iterator
 from io import BufferedReader
 from pathlib import Path
-from typing import IO, Any, Iterator, List, Union
+from typing import IO, Any
+from pydicom import dcmread
 
-from pyspark.sql.datasource import InputPartition
+from python_data_sources.common.range_partition import RangePartition
 
 logger = logging.getLogger(__name__)
 
 
-class RangePartition(InputPartition):
-    """
-    This DataSource InputPartition class provides tracking of ranges within a list
-    """
-
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
-
-
-def _readzipdcm(partition: RangePartition, paths: list, dicom_keys_filter: list[str]) -> Iterator[List[Any]]:
+def readzipdcm(partition: RangePartition, paths: list, dicom_keys_filter: list[str]) -> Iterator[list[Any]]:
     """
     Generator function to extract DICOM metadata from .dcm files within ZIP archives.
 
@@ -48,34 +42,14 @@ def _readzipdcm(partition: RangePartition, paths: list, dicom_keys_filter: list[
         - The 'pixel_hash' is computed using SHA-1 on the pixel array of the DICOM file.
         - Logging is performed at various steps for debugging purposes.
     """
-
-    import hashlib
-    from zipfile import ZipFile
-
-    from pydicom import dcmread
-
-    def _handle_dcm_fp(fp: Union[BufferedReader, IO]):
-        with dcmread(fp) as ds:
-            meta = ds.to_json_dict()
-            meta["hash"] = hashlib.sha1(fp.read()).hexdigest()
-            if "7FE00010" in meta:  # will throw exception if no pixel data available
-                meta["pixel_hash"] = hashlib.sha1(ds.PixelData).hexdigest()
-            if meta is None:
-                meta = ""
-            for key in dicom_keys_filter:
-                if key in meta:
-                    del meta[key]
-            logger.debug(f"meta: {meta}")
-            return meta
-
     rowid = partition.start
     for path in paths[partition.start : partition.end]:
         try:
             logger.debug(f"processing path: {path}")
             if str(path).endswith(".dcm"):
-                with open(path, "rb") as fp:
+                with open(path, "rb") as file:
                     rowid = rowid + 1
-                    yield [rowid, path, _handle_dcm_fp(fp)]
+                    yield [rowid, path, _handle_dcm_fp(file, dicom_keys_filter)]
             else:
                 with ZipFile(path, "r") as zipFile:
                     for name_in_zip in zipFile.namelist():
@@ -86,14 +60,27 @@ def _readzipdcm(partition: RangePartition, paths: list, dicom_keys_filter: list[
                                 yield [
                                     rowid,
                                     f"{path}::{name_in_zip}",
-                                    _handle_dcm_fp(zip_fp),
+                                    _handle_dcm_fp(zip_fp, dicom_keys_filter),
                                 ]
         except Exception as e:
             logger.error(f"Processing {path} caused exception: {e}")
-            raise Exception(f"Processing {path} caused exception: {e}")
+            raise RuntimeError(f"Processing {path} caused exception: {e}") from e
 
 
-def _path_handler(path: str, pathGlobFilter="*.zip", recursiveFileLookup=True) -> list[Path]:
+def _handle_dcm_fp(fp: BufferedReader | IO, dicom_keys_filter: list[str]):
+    with dcmread(fp) as ds:
+        meta = ds.to_json_dict()
+        meta["hash"] = hashlib.sha1(fp.read()).hexdigest()
+        if "7FE00010" in meta:  # will throw exception if no pixel data available
+            meta["pixel_hash"] = hashlib.sha1(ds.PixelData).hexdigest()
+        for key in dicom_keys_filter:
+            if key in meta:
+                del meta[key]
+        logger.debug(f"meta: {meta}")
+        return meta
+
+
+def path_handler(path: str, pathGlobFilter="*.zip", recursiveFileLookup=True) -> list[Path]:
     #
     # In this implementation, we validate the path,
     # and get the list of the paths to scan.
@@ -102,8 +89,6 @@ def _path_handler(path: str, pathGlobFilter="*.zip", recursiveFileLookup=True) -
     # TODO: Explore how to deal with large multi-frame DICOMs vs smaller single frame DICOMS (same amount of metadata)
     # TODO: Explore how to partition a single large Zip file
     #
-    from pathlib import Path
-
     if path is None:
         raise ValueError("path parmeter is None")
 
@@ -116,7 +101,10 @@ def _path_handler(path: str, pathGlobFilter="*.zip", recursiveFileLookup=True) -
     if p.is_dir():
         # a folder of zips
         # TODO: .glob() performance at extreme scales limits scale
-        paths = sorted(Path(path).glob(f"**/{pathGlobFilter}"))
+        if recursiveFileLookup:
+            paths = sorted(p.rglob(pathGlobFilter))
+        else:
+            paths = sorted(p.glob(pathGlobFilter))
     else:
         if not (str(p).lower().endswith(".dcm") or str(p).lower().endswith(".zip")):
             raise ValueError(f"File {path} does not have an allowed extension (dcm,zip,Zip)")

@@ -2,8 +2,9 @@
 Test suite for the MCAP data source.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 from pyspark.sql import SparkSession
 
 

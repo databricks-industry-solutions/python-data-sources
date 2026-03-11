@@ -9,10 +9,10 @@ Set environment variables for broker configuration:
 - MQTT_LOCAL_PASSWORD
 """
 
-import ssl
-import os
-import time
 import datetime
+import os
+import ssl
+import time
 
 import pytest
 from paho.mqtt import client as mqtt
@@ -51,8 +51,8 @@ def mqtt_remote_client(mqtt_server_config):
 
     try:
         client.connect(mqtt_server_config["host"], mqtt_server_config["port"], 60)
-        sslSettings = ssl.SSLContext(ssl.PROTOCOL_TLS)
-        client.tls_set_context(sslSettings)
+        ssl_settings = ssl.SSLContext(ssl.PROTOCOL_TLS)
+        client.tls_set_context(ssl_settings)
         client.loop_start()
         yield client
         client.loop_stop()
@@ -94,7 +94,7 @@ def test_mqtt_local_read_stream(spark, mqtt_client, mqtt_config):
     time.sleep(5)
 
     # Publish the test messages
-    for topic, payload, qos, is_persisted in test_messages:
+    for topic, payload, _qos, _is_persisted in test_messages:
         mqtt_client.publish(topic, payload, qos=2)
 
     time.sleep(10)
@@ -129,7 +129,7 @@ def test_hivemq_read_stream(spark, mqtt_remote_client, mqtt_server_config):
     ]
 
     # Publish the test messages with retain=True
-    for topic, payload, qos, is_persisted in test_messages:
+    for topic, payload, _qos, _is_persisted in test_messages:
         mqtt_remote_client.publish(topic, payload, qos=2, retain=True)
 
     time.sleep(5)

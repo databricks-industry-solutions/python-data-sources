@@ -1,21 +1,24 @@
 import logging
-from typing import Iterator, Sequence, Tuple, Union
+from collections.abc import Iterator, Sequence
 
-from python_data_sources.zipdcm.zip_dcm_utils import RangePartition, _path_handler, _readzipdcm
 from pyarrow import RecordBatch
 from pyspark.sql.datasource import DataSource, DataSourceReader, InputPartition
 from pyspark.sql.types import StructType
 
+from python_data_sources.zipdcm.zip_dcm_utils import path_handler, readzipdcm
+from python_data_sources.common.range_partition import RangePartition
+from python_data_sources.common.utils import get_range_partitions
+
 logger = logging.getLogger(__name__)
 
-DEFUALT_numPartitions = 2
+DEFAULT_NUM_PARTITIONS = 2
 
 # DICOM header keys to delete before saving the metadata
 # raw pixel data - 0x7FE0, 0x0010
 # overlay data - 6000 3000
 # VOI LUT Sequence Attribute - 00283010
 # LUT Data Attribute - 00283006
-DEFAULT_dicomKeysFilter = "60003000,7FE00010,00283010,00283006"
+DEFAULT_DICOM_KEYS_FILTER = "60003000,7FE00010,00283010,00283006"
 
 
 class ZipDCMDataSourceReader(DataSourceReader):
@@ -30,11 +33,11 @@ class ZipDCMDataSourceReader(DataSourceReader):
         self.path = self.options.get("path", None)
         self.pathGlobFilter = self.options.get("pathGlobFilter", "*.zip")
         self.recursiveFileLookup = bool(self.options.get("recursiveFileLookup", "false"))
-        self.numPartitions = int(self.options.get("numPartitions", DEFUALT_numPartitions))
+        self.numPartitions = int(self.options.get("numPartitions", DEFAULT_NUM_PARTITIONS))
         self.deep = False
-        self.dicom_keys_filter = self.options.get("dicomKeysFilter", DEFAULT_dicomKeysFilter).split(",")
+        self.dicom_keys_filter = self.options.get("dicomKeysFilter", DEFAULT_DICOM_KEYS_FILTER).split(",")
         assert self.path is not None
-        self.paths = _path_handler(self.path, self.pathGlobFilter)
+        self.paths = path_handler(self.path, self.pathGlobFilter)
 
     def partitions(self) -> Sequence[RangePartition]:
         """
@@ -43,17 +46,9 @@ class ZipDCMDataSourceReader(DataSourceReader):
         """
         logger.debug(f"ZipDCMDataSourceReader.partitions({self.numPartitions}, {self.path}, paths: {self.paths}): ")
         length = len(self.paths)
-        partitions = []
-        partition_size_max = int(max(1, length / self.numPartitions))
-        start = 0
-        while start < length:
-            end = min(length, start + partition_size_max)
-            partitions.append(RangePartition(start, end))
-            start = start + partition_size_max
-        logger.debug(f"#partitions {len(partitions)} {partitions}")
-        return partitions
+        return get_range_partitions(length, self.numPartitions)
 
-    def read(self, partition: InputPartition) -> Union[Iterator[Tuple], Iterator["RecordBatch"]]:
+    def read(self, partition: InputPartition) -> Iterator[tuple] | Iterator["RecordBatch"]:
         """
         Executor level method, performs read by Range Partition
         """
@@ -63,7 +58,7 @@ class ZipDCMDataSourceReader(DataSourceReader):
         assert self.paths is not None, f"path: {self.path}"
 
         # Library imports must be within the method.
-        return _readzipdcm(partition, self.paths, self.dicom_keys_filter)
+        return readzipdcm(partition, self.paths, self.dicom_keys_filter)
 
 
 class ZipDCMDataSource(DataSource):

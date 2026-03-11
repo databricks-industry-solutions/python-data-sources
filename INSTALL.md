@@ -54,7 +54,7 @@ After installation, register and use the data sources:
 
 ```python
 from pyspark.sql import SparkSession
-from src.python_data_sources.mcap import MCAPDataSource
+from python_data_sources.mcap import MCAPDataSource
 
 spark = SparkSession.builder.getOrCreate()
 spark.dataSource.register(MCAPDataSource)

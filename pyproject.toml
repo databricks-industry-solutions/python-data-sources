@@ -7,7 +7,7 @@ name = "python-data-sources"
 version = "0.1.0"
 description = "A collection of custom PySpark data source connectors for various formats"
 readme = "README.md"
-license-files = { paths = ["LICENSE", "NOTICE"] }
+license-files = { paths = ["LICENSE.md", "NOTICE.md"] }
 requires-python = ">=3.12"
 authors = [
     { name = "Databricks Industry Solutions", email = "industry-solutions@databricks.com" },
@@ -15,7 +15,7 @@ authors = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: Other/Proprietary License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -150,6 +150,20 @@ dependencies = [
 test = "pytest tests/unit/zipdcm -v {args}"
 cov = "pytest tests/unit/zipdcm --cov=src/python_data_sources/zipdcm --cov-report=term-missing {args}"
 
+# Common modules test environment
+[tool.hatch.envs.test-common]
+dependencies = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "pyspark>=4.0.0.dev1",
+    "pyarrow>=14.0.0",
+]
+
+[tool.hatch.envs.test-common.scripts]
+test = "pytest tests/unit/common -v {args}"
+cov = "pytest tests/unit/common --cov=src/python_data_sources/common --cov-report=term-missing {args}"
+
 # All tests environment
 [tool.hatch.envs.test-all]
 features = ["all"]
@@ -183,16 +197,16 @@ testpaths = ["tests"]
 target-version = ["py312"]
 line-length = 120
 skip-string-normalization = true
-extend-exclude = 'apps|dashboards|docs|mcap|media|mqtt|scripts|zipdcm'
+extend-exclude = 'apps|dashboards|docs|media|scripts'
 
 [tool.ruff]
 cache-dir = ".venv/ruff-cache"
 target-version = "py312"
 line-length = 120
-exclude = ["apps/*", "dashboards/*", "docs/*", "mcap/*", "media/*", "mqtt/*", "scripts/*", "zipdcm/*"]
+exclude = ["apps/*", "dashboards/*", "docs/*", "media/*", "scripts/*"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["python-data-sources"]
+known-first-party = ["python_data_sources"]
 
 [tool.isort]
 profile = "black"
@@ -215,8 +229,8 @@ exclude_lines = [
 # Sources https://google.github.io/styleguide/pylintrc
 # License: https://github.com/google/styleguide/blob/gh-pages/LICENSE
 
-# Add app/src to sys.path for pylint to find databricks_labs_dqx_app
-init-hook = "import sys; sys.path.insert(0, 'app/src')"
+# Add src to sys.path for pylint
+init-hook = "import sys; sys.path.insert(0, 'src')"
 
 # Clear in-memory caches upon conclusion of linting. Useful if running pylint in
 # a server-like mode.
@@ -249,7 +263,7 @@ fail-under = 10.0
 # format. Because '\\' represents the directory delimiter on Windows systems, it
 # can't be used as an escape character.
 ignore-paths = [
-    "^.*/apps/", "^.*/dashboards/", "^.*/docs/", "^.*/mcap/", "&.*/media/", "^.*/mqtt/", "^.*/scripts/", "^.*/zipdcm/"
+    "^.*/apps/", "^.*/dashboards/", "^.*/docs/", "^.*/media/", "^.*/scripts/"
 ]
 
 # Files or directories matching the regular expression patterns are skipped. The
@@ -327,19 +341,19 @@ suggestion-mode = true
 
 [tool.pylint.basic]
 # Naming style matching correct argument names.
-argument-naming-style = "snake_case"
+argument-naming-style = "any"
 
 # Regular expression matching correct argument names. Overrides argument-naming-
 # style. If left empty, argument names will be checked with the set naming style.
-argument-rgx = "[a-z_][a-z0-9_]{2,40}$"
+#argument-rgx =
 
 # Naming style matching correct attribute names.
-attr-naming-style = "snake_case"
+attr-naming-style = "any"
 
 # Regular expression matching correct attribute names. Overrides attr-naming-
 # style. If left empty, attribute names will be checked with the set naming
 # style.
-attr-rgx = "[a-z_][a-z0-9_]{1,}$"
+#attr-rgx =
 
 # Bad variable names which should always be refused, separated by a comma.
 bad-names = ["foo", "bar", "baz", "toto", "tutu", "tata"]
@@ -383,7 +397,7 @@ const-rgx = "(([A-Z_][A-Z0-9_]*)|(__.*__))$"
 docstring-min-length = -1
 
 # Naming style matching correct function names.
-function-naming-style = "snake_case"
+function-naming-style = "any"
 
 # Regular expression matching correct function names. Overrides function-naming-
 # style. If left empty, function names will be checked with the set naming style.
@@ -418,11 +432,11 @@ inlinevar-naming-style = "any"
 inlinevar-rgx = "[A-Za-z_][A-Za-z0-9_]*$"
 
 # Naming style matching correct method names.
-method-naming-style = "snake_case"
+method-naming-style = "any"
 
 # Regular expression matching correct method names. Overrides method-naming-
 # style. If left empty, method names will be checked with the set naming style.
-method-rgx = "[a-z_][a-z0-9_]{1,}$"
+#method-rgx = "[a-z_][a-z0-9_]{1,}$"
 
 # Naming style matching correct module names.
 module-naming-style = "snake_case"
@@ -453,11 +467,11 @@ property-classes = ["abc.abstractproperty"]
 # typevar-rgx =
 
 # Naming style matching correct variable names.
-variable-naming-style = "snake_case"
+variable-naming-style = "any"
 
 # Regular expression matching correct variable names. Overrides variable-naming-
 # style. If left empty, variable names will be checked with the set naming style.
-variable-rgx = "[a-z_][a-z0-9_]{2,40}$"
+#variable-rgx = "[a-z_][a-z0-9_]{2,40}$"
 
 [tool.pylint.broad_try_clause]
 # Maximum number of statements allowed in a try clause
@@ -636,7 +650,8 @@ disable = [
     "rewrite-as-for-loop",
     "redundant-returns-doc",
     "incompatible-with-uc",
-    "no-spark-argument-in-function"
+    "no-spark-argument-in-function",
+    "super-init-not-called",
 ]
 
 # Enable the message, report, category or checker with the given id(s). You can

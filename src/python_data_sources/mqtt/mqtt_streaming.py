@@ -4,10 +4,10 @@ import logging
 import random
 import re
 import time
-import paho.mqtt.client as mqttClient
 
+import paho.mqtt.client as mqttClient
 from pyspark.sql.datasource import DataSource, InputPartition, SimpleDataSourceStreamReader
-from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql.types import StringType, StructField, StructType
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -104,12 +104,12 @@ class MqttDataSource(DataSource):
 
 class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
 
-    def __init__(self, schema, options):
+    def __init__(self, _schema, options):
         """
         Initialize the MQTT simple stream reader with configuration options.
 
         Args:
-            schema (StructType): The schema for the streaming data.
+            _schema (StructType): The schema for the streaming data.
             options (dict): Configuration options for the MQTT connection.
                           See class docstring for supported options.
         """
@@ -124,11 +124,12 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
         self.keep_alive = int(options.get("keepalive", 60))
         self.clean_session = options.get("clean_session", False)
         self.conn_timeout = int(options.get("conn_time", 1))
-        self.clean_session = options.get("clean_session", False)
-        self.ca_certs = options.get("ca_certs", None)
-        self.certfile = options.get("certfile", None)
-        self.keyfile = options.get("keyfile", None)
-        self.tls_disable_certs = options.get("tls_disable_certs", None)
+        self.tls_certs = {
+            "ca_certs": options.get("ca_certs", None),
+            "certfile": options.get("certfile", None),
+            "keyfile": options.get("keyfile", None),
+            "disable_certs": options.get("tls_disable_certs", None),
+        }
 
         # Validate all input parameters
         self._validate_input_parameters()
@@ -246,16 +247,7 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
         """
         if self.require_tls:
             # Build tls_set arguments based on provided certificates
-            tls_args = {}
-
-            if self.ca_certs:
-                tls_args['ca_certs'] = self.ca_certs
-
-            if self.certfile:
-                tls_args['certfile'] = self.certfile
-
-            if self.keyfile:
-                tls_args['keyfile'] = self.keyfile
+            tls_args = {k: v for k, v in self.tls_certs.items() if k != "disable_certs" and v}
 
             # Call tls_set with the appropriate parameters
             if tls_args:
@@ -285,12 +277,9 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
         """
         return [RangePartition(start["offset"], end["offset"])]
 
-    def read(self, partition):
+    def read(self, _):
         """
         Read MQTT messages from the broker.
-
-        Args:
-            partition (RangePartition): The partition to read from.
 
         Returns:
             Iterator[list]: An iterator of lists containing the MQTT message data.
@@ -318,7 +307,7 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
 
         mqtt_client.username_pw_set(self.username, self.password)
 
-        def on_connect(client, userdata, flags, rc):
+        def on_connect(client, _userdata, _flags, rc):
             if rc == 0:
                 client.subscribe(self.topic, qos=self.qos)
                 logger.warning(f"Connected to broker {self.broker_address} on port {self.port} with topic {self.topic}")
@@ -327,7 +316,7 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
                     f"Connection failed to broker {self.broker_address} on port {self.port} with topic {self.topic}"
                 )
 
-        def on_message(client, userdata, message):
+        def on_message(_client, _userdata, message):
             msg_data = [
                 str(datetime.datetime.now()),
                 message.topic,
@@ -358,7 +347,7 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
             }
 
             error_msg = f"Failed to connect to MQTT broker. Connection details: {connection_context}"
-            logger.exception(error_msg, exc_info=e)
+            logger.exception(error_msg)
 
             # Re-raise with enhanced context
             raise ConnectionError(error_msg) from e
@@ -368,7 +357,7 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
 
         mqtt_client.loop_stop()  # Stop the loop after the timeout
         mqtt_client.disconnect()
-        logger.warning("current state of data: %s", self.new_data)
+        logger.warning(f"current state of data: {self.new_data}")
 
         return iter(self.new_data)
 

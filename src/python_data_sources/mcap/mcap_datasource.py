@@ -1,20 +1,25 @@
 import json
 import logging
+from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import Iterator, Sequence, Tuple
+
+from google.protobuf.json_format import MessageToDict
+from mcap.reader import McapReader, make_reader
+from mcap.records import Channel, Message, Schema
+from mcap_protobuf.decoder import DecoderFactory
 from pyspark.sql.datasource import DataSource, DataSourceReader, InputPartition
 from pyspark.sql.types import StructType
-from mcap.reader import make_reader
-from mcap_protobuf.decoder import DecoderFactory
-from google.protobuf.json_format import MessageToDict
+
+from python_data_sources.common.range_partition import RangePartition
+from python_data_sources.common.utils import get_range_partitions
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_numPartitions = 4
-DEFAULT_pathGlobFilter = "*.mcap"
+DEFAULT_NUM_PARTITIONS = 4
+DEFAULT_PATH_GLOB_FILTER = "*.mcap"
 
 
-def _path_handler(path: str, glob_pattern: str, recursive: bool = False) -> list:
+def path_handler(path: str, glob_pattern: str, recursive: bool = False) -> list:
     """
     Discover files matching the glob pattern in the given path.
 
@@ -30,52 +35,37 @@ def _path_handler(path: str, glob_pattern: str, recursive: bool = False) -> list
 
     if path_obj.is_file():
         return [str(path_obj)]
-    elif path_obj.is_dir():
+    if path_obj.is_dir():
         # Use rglob for recursive search, glob for non-recursive
         if recursive:
             files = sorted(path_obj.rglob(glob_pattern))
         else:
             files = sorted(path_obj.glob(glob_pattern))
         return [str(f) for f in files if f.is_file()]
-    else:
-        # Try glob pattern on parent directory
-        parent = path_obj.parent
-        if parent.exists():
-            files = sorted(parent.glob(path_obj.name))
-            return [str(f) for f in files if f.is_file()]
+    # Try glob pattern on parent directory
+    parent = path_obj.parent
+    if parent.exists():
+        files = sorted(parent.glob(path_obj.name))
+        return [str(f) for f in files if f.is_file()]
     return []
 
 
-class RangePartition(InputPartition):
-    """
-    Range partition for splitting file lists.
-    """
-
-    def __init__(self, start: int, end: int):
-        self.start = start
-        self.end = end
-
-    def __repr__(self):
-        return f"RangePartition({self.start}, {self.end})"
-
-
-def decode_protobuf_message(message, schema, reader):
+def decode_protobuf_message(message, schema, _reader):
     """Decode protobuf messages."""
     decoder_factory = DecoderFactory()
     decoder = decoder_factory.decoder_for(message.log_time, schema)
     if decoder:
         decoded_message = decoder(message.data)
         return MessageToDict(decoded_message)
-    else:
-        return {"raw_data": message.data.hex()}
+    return {"raw_data": message.data.hex()}
 
 
-def decode_json_message(message, schema, reader):
+def decode_json_message(message, _schema, _reader):
     """Decode JSON messages."""
     return json.loads(message.data.decode("utf-8"))
 
 
-def decode_fallback(message, schema, reader):
+def decode_fallback(message, _schema, _reader):
     """Fallback decoder for unknown formats."""
     return {"raw_data": message.data.hex()}
 
@@ -88,7 +78,29 @@ DECODERS = {
 }
 
 
-def _read_mcap_file(file_path: str, topic_filter: str = None) -> Iterator[Tuple]:
+def _decode_message(message: Message, schema: Schema, channel: Channel, reader: McapReader) -> tuple:
+    """Decode a single MCAP message and return a row tuple."""
+    enc_raw = channel.message_encoding or getattr(schema, "encoding", None)
+    if not enc_raw:
+        enc = "fallback"
+    else:
+        enc = enc_raw.lower()
+        if enc not in DECODERS:
+            enc = "fallback"
+
+    decoded_fn = DECODERS.get(enc, decode_fallback)
+
+    try:
+        msg_dict = decoded_fn(message, schema, reader)
+    except Exception as e:
+        logger.warning(f"Error decoding message: {e}")
+        msg_dict = {"error": str(e)}
+
+    data_json = json.dumps(msg_dict)
+    return (int(message.sequence), channel.topic, schema.name, enc, int(message.log_time), data_json)
+
+
+def _read_mcap_file(file_path: str, topic_filter: str = None) -> Iterator[tuple]:
     """
     Read a single MCAP file and yield rows.
 
@@ -110,38 +122,15 @@ def _read_mcap_file(file_path: str, topic_filter: str = None) -> Iterator[Tuple]
             reader = make_reader(f)
 
             for schema, channel, message in reader.iter_messages():
-                # Apply topic filter if specified
                 if topic_filter and channel.topic != topic_filter:
                     continue
-
-                # Safely extract encoding, handling None values to prevent AttributeError
-                # Some MCAP files may have missing encoding metadata
-                enc_raw = channel.message_encoding or getattr(schema, "encoding", None)
-                if not enc_raw:
-                    enc = "fallback"
-                else:
-                    enc = enc_raw.lower()
-                    if enc not in DECODERS:
-                        enc = "fallback"
-
-                decoded_fn = DECODERS.get(enc, decode_fallback)
-
-                try:
-                    msg_dict = decoded_fn(message, schema, reader)
-                except Exception as e:
-                    logger.warning(f"Error decoding message: {e}")
-                    msg_dict = {"error": str(e)}
-
-                # Convert data dict to JSON string for Spark
-                data_json = json.dumps(msg_dict)
-
-                yield (int(message.sequence), channel.topic, schema.name, enc, int(message.log_time), data_json)
+                yield _decode_message(message, schema, channel, reader)
     except Exception as e:
         logger.error(f"Error reading MCAP file {file_path}: {e}")
         raise
 
 
-def _read_mcap_partition(partition: RangePartition, paths: list, topic_filter: str = None) -> Iterator[Tuple]:
+def _read_mcap_partition(partition: RangePartition, paths: list, topic_filter: str = None) -> Iterator[tuple]:
     """
     Read MCAP files for a given partition range.
 
@@ -171,9 +160,9 @@ class MCAPDataSourceReader(DataSourceReader):
         self.schema: StructType = schema
         self.options = options
         self.path = self.options.get("path", None)
-        self.pathGlobFilter = self.options.get("pathGlobFilter", DEFAULT_pathGlobFilter)
+        self.pathGlobFilter = self.options.get("pathGlobFilter", DEFAULT_PATH_GLOB_FILTER)
         self.recursiveFileLookup = bool(self.options.get("recursiveFileLookup", "false"))
-        self.numPartitions = int(self.options.get("numPartitions", DEFAULT_numPartitions))
+        self.numPartitions = int(self.options.get("numPartitions", DEFAULT_NUM_PARTITIONS))
         self.topicFilter = self.options.get("topicFilter", None)
 
         # Treat "*" as no filter
@@ -181,7 +170,7 @@ class MCAPDataSourceReader(DataSourceReader):
             self.topicFilter = None
 
         assert self.path is not None, "path option is required"
-        self.paths = _path_handler(self.path, self.pathGlobFilter, recursive=self.recursiveFileLookup)
+        self.paths = path_handler(self.path, self.pathGlobFilter, recursive=self.recursiveFileLookup)
 
         if not self.paths:
             logger.warning(f"No MCAP files found at path: {self.path} with filter: {self.pathGlobFilter}")
@@ -205,19 +194,9 @@ class MCAPDataSourceReader(DataSourceReader):
         if length == 0:
             return [RangePartition(0, 0)]
 
-        partitions = []
-        partition_size_max = int(max(1, length / self.numPartitions))
-        start = 0
+        return get_range_partitions(length, self.numPartitions)
 
-        while start < length:
-            end = min(length, start + partition_size_max)
-            partitions.append(RangePartition(start, end))
-            start = start + partition_size_max
-
-        logger.debug(f"#partitions {len(partitions)} {partitions}")
-        return partitions
-
-    def read(self, partition: InputPartition) -> Iterator[Tuple]:
+    def read(self, partition: InputPartition) -> Iterator[tuple]:
         """
         Executor level method, performs read by Range Partition.
 
