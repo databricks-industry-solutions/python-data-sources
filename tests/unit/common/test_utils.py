@@ -2,7 +2,6 @@
 Test suite for the common utility functions.
 """
 
-
 from python_data_sources.common.range_partition import RangePartition
 from python_data_sources.common.utils import get_range_partitions
 
