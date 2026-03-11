@@ -14,3 +14,6 @@ dev: .venv/bin/python
 
 fmt:
 	hatch run fmt
+
+test:
+	hatch run test
