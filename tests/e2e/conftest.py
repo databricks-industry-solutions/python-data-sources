@@ -69,14 +69,14 @@ def upload_directory_recursive(ws: WorkspaceClient, local_path: Path, target_pat
 
 
 def new_classic_job_cluster(ws: WorkspaceClient | None = None) -> ClusterSpec:
+    _DEFAULT_SPARK_VERSION = "17.3.x-scala2.13"
     if ws is None:
         ws = WorkspaceClient()
-    spark_version = ws.clusters.select_spark_version(latest=True)
     node_type = ws.clusters.select_node_type(local_disk=True, min_memory_gb=16)
     return ClusterSpec(
         is_single_node=True,
         node_type_id=node_type,
-        spark_version=spark_version,
+        spark_version=_DEFAULT_SPARK_VERSION,
         kind=Kind.CLASSIC_PREVIEW,
         data_security_mode=DataSecurityMode.DATA_SECURITY_MODE_DEDICATED,
         single_user_name=ws.current_user.me().user_name,
