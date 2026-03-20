@@ -47,8 +47,13 @@ def test_run_zipdcm_demo_notebook(
         },
     )
     job = make_job(
-        tasks=[Task(task_key="run_zipdcm_demo_notebook", notebook_task=notebook_task)],
-        new_cluster=new_classic_job_cluster(ws),
+        tasks=[
+            Task(
+                task_key="run_zipdcm_demo_notebook",
+                notebook_task=notebook_task,
+                new_cluster=new_classic_job_cluster(ws),
+            )
+        ],
     )
 
     waiter = ws.jobs.run_now_and_wait(job.job_id)
