@@ -12,7 +12,7 @@ install_logger()
 logger = logging.getLogger(__name__)
 logging.getLogger("tests").setLevel(logging.DEBUG)
 logging.getLogger("python_data_sources").setLevel(logging.DEBUG)
-TEST_CATALOG = "main"
+TEST_CATALOG = "gh_catalog_001"
 
 
 @pytest.fixture
