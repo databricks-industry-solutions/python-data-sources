@@ -6,6 +6,7 @@ import pytest
 from databricks.labs.blueprint.logger import install_logger
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.jobs import Run, TerminationTypeType
+from databricks.sdk.service.compute import ClusterSpec, DataSecurityMode, Kind
 
 install_logger()
 logger = logging.getLogger(__name__)
@@ -65,3 +66,22 @@ def upload_directory_recursive(ws: WorkspaceClient, local_path: Path, target_pat
         else:
             ws.files.upload_from(dest_path.as_posix(), item.as_posix())
             logger.info(f"Uploaded file: {item.name} -> {dest_path}")
+
+
+def new_classic_job_cluster(ws: WorkspaceClient | None = None) -> ClusterSpec:
+    if ws is None:
+        ws = WorkspaceClient()
+    spark_version = ws.clusters.select_spark_version(latest=True)
+    node_type = ws.clusters.select_node_type(local_disk=True, min_memory_gb=16)
+    return ClusterSpec(
+        is_single_node=True,
+        node_type_id=node_type,
+        spark_version=spark_version,
+        kind=Kind.CLASSIC_PREVIEW,
+        data_security_mode=DataSecurityMode.DATA_SECURITY_MODE_DEDICATED,
+        single_user_name=ws.current_user.me().user_name,
+        spark_conf={
+            "spark.databricks.cluster.profile": "singleNode",
+            "spark.master": "local[*]",
+        },
+    )

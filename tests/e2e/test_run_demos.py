@@ -4,7 +4,7 @@ from pathlib import Path
 
 from databricks.sdk.service.workspace import ImportFormat
 from databricks.sdk.service.jobs import NotebookTask, Task
-from tests.e2e.conftest import validate_run_status, upload_directory_recursive, TEST_CATALOG
+from tests.e2e.conftest import new_classic_job_cluster, validate_run_status, upload_directory_recursive, TEST_CATALOG
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def test_run_zipdcm_demo_notebook(
     )
     job = make_job(
         tasks=[Task(task_key="run_zipdcm_demo_notebook", notebook_task=notebook_task)],
-        environments=[{"environment_key": "serverless_environment_v4", "spec": {"environment_version": "4"}}],
+        new_cluster=new_classic_job_cluster(ws),
     )
 
     waiter = ws.jobs.run_now_and_wait(job.job_id)
