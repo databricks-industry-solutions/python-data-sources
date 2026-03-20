@@ -27,7 +27,7 @@ pluggy==1.6.0
 protobuf==6.31.1
 py4j==0.10.9.7
 pyarrow==21.0.0
-pydicom==3.0.1
+pydicom==3.0.2
 Pygments==2.19.2
 pymdown-extensions==10.16.1
 pyspark==4.0.0.dev1
