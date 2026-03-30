@@ -1,5 +1,6 @@
 # Databricks Asset Bundle files
 .databricks/
+databricks.yml
 
 # IDE files
 .vscode/
