@@ -6,6 +6,7 @@
 Introduced in Spark 4.x, Python Data Source API allows you to create PySpark Data Sources leveraging long standing python libraries for handling unique file types or specialized interfaces with spark read, readStream, write and writeStream APIs.
 | Data Source Name | Purpose |
 | --- | --- |
+| [dxf](dxf/README.md) | Read AutoCAD DXF drawing exchange files |
 | [zipdcm](zipdcm/README.md) | Read DICOM files from Zip file archives |
 
 ## Documentation
@@ -27,5 +28,6 @@ Please see our [installation guide](./INSTALL.md)
 
 | Datasource | Package    | Purpose                           | License     | Source                               |
 | ---------- | ---------- | --------------------------------- | ----------- | ------------------------------------ |
+| dxf        | ezdxf      | Python library for DXF files      | MIT         | https://github.com/mozman/ezdxf      |
 | zipdcm     | pydicom	  | Python api for DICOM files        |	MIT	        | https://github.com/pydicom/pydicom   |
 | zipdcm     | pylibjpeg  | Decoding / Encoding pixel formats | GPLv3 & MIT | https://github.com/pydicom/pylibjpeg |
