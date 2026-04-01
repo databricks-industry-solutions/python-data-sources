@@ -11,20 +11,26 @@ permissions:
   contents: read
 
 jobs:
-  # NOTE: Ensures code is properly formatted
   fmt:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
+      - name: Setup uv
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098
+        with:
+          version: "0.11.2"
+
+      - name: Initialize the project
+        run: make dev
+
       - name: Format all files
-        run: make dev fmt
+        run: make fmt
 
       - name: Fail on differences
         run: git diff --exit-code
 
-  # NOTE: Detects newly created or modified data sources
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
@@ -49,47 +55,10 @@ jobs:
 
       - name: Check if any submodules changed
         id: check
-        run: |
-          CHANGED='${{ steps.detect.outputs.changed-directories }}'
-          echo "Changed directories: $CHANGED"
+        env:
+          CHANGED_DIRECTORIES: ${{ steps.detect.outputs.changed-directories }}
+        run: .github/scripts/detect_changed_submodules.sh
 
-          # Extract unique submodule names from paths like:
-          # - src/python_data_sources/<submodule>
-          # - tests/<submodule>
-          SUBMODULES=$(echo "$CHANGED" | jq -r '
-            [.[] |
-              # Extract from src/python_data_sources/<submodule>
-              (capture("src/python_data_sources/(?<name>[^/]+)") | .name),
-              # Extract from tests/<submodule>
-              (capture("tests/unit/(?<name>[^/]+)") | .name)
-            ] |
-            # Remove nulls and get unique values
-            map(select(. != null)) |
-            unique |
-            # Filter out common files (conftest, etc.)
-            map(select(. != "conftest.py" and . != "__pycache__"))
-          ')
-
-          if [ -z "$SUBMODULES" ] || [ "$SUBMODULES" = "null" ] || [ "$SUBMODULES" = "[]" ]; then
-            SUBMODULES="[]"
-          fi
-
-          COMPACT_SUBMODULES=$(echo "$SUBMODULES" | jq -c '.')
-          echo "submodules=$COMPACT_SUBMODULES" >> $GITHUB_OUTPUT
-
-          if [ "$COMPACT_SUBMODULES" = "[]" ]; then
-            echo "has-changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "has-changes=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Output detected submodules
-        run: |
-          echo "Changed directories: ${{ steps.detect.outputs.changed-directories }}"
-          echo "Submodules to test: ${{ steps.check.outputs.submodules }}"
-          echo "Has changes: ${{ steps.check.outputs.has-changes }}"
-
-  # NOTE: Runs tests of the created or modified data sources; Tests of unmodified data sources are skipped for convenience
   test:
     needs: detect-changes
     if: needs.detect-changes.outputs.has-changes == 'true'
@@ -101,62 +70,48 @@ jobs:
         submodule: ${{ fromJSON(needs.detect-changes.outputs.submodules) }}
         python-version: ['3.12']
 
+    env:
+      UV_PYTHON: "${{ matrix.python-version }}"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+      - name: Setup uv
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098
         with:
-          python-version: ${{ matrix.python-version }}
+          version: "0.11.2"
 
-      - name: Install Hatch
-        run: |
-          pip install --upgrade pip
-          pip install hatch
+      - name: Initialize the project
+        run: make dev
 
       - name: Run tests for ${{ matrix.submodule }}
         env:
           SUBMODULE: ${{ matrix.submodule }}
-        run: |
-          echo "Running tests for ${SUBMODULE}"
-          hatch run "test-${SUBMODULE}:test"
+        run: make test-module MODULE="${SUBMODULE}"
 
-  # NOTE: Runs all tests on push to the main branch
   test-all:
     needs: detect-changes
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.12']
+    env:
+      UV_PYTHON: "3.12"
 
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+      - name: Setup uv
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098
         with:
-          python-version: ${{ matrix.python-version }}
+          version: "0.11.2"
 
-      - name: Install Hatch
-        run: |
-          pip install --upgrade pip
-          pip install hatch
+      - name: Initialize the project
+        run: make dev
 
       - name: Run all tests
-        run: |
-          echo "Running MCAP tests..."
-          hatch run test-mcap:test
-
-          echo "Running MQTT tests..."
-          hatch run test-mqtt:test
-
-          echo "Running ZipDCM tests..."
-          hatch run test-zipdcm:test
+        run: make test
 
   test-summary:
     needs: [detect-changes, test, test-all]
@@ -177,32 +132,29 @@ jobs:
             echo "All tests passed!"
           fi
 
-  # NOTE: Tests any example notebooks in '/examples' by running them in a test workspace; Will not be run from forks (e.g. from external contributors)
   e2e:
     if: github.event_name == 'pull_request' && !github.event.pull_request.draft && !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
+
+    env:
+      UV_PYTHON: "3.12"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+      - name: Setup uv
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098
         with:
-          cache: 'pip'
-          cache-dependency-path: '**/pyproject.toml'
-          python-version: '3.12'
+          version: "0.11.2"
 
-      - name: Install Hatch
-        run: |
-          pip install --upgrade pip
-          pip install hatch
+      - name: Initialize the project
+        run: make dev
 
       - name: Run e2e Tests
-        run: |
-          echo "Running e2e tests..."
-          hatch run test-all:e2e
+        run: make e2e
         env:
           REF_NAME: ${{ github.ref_name }}
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}

@@ -96,7 +96,6 @@ class MqttDataSource(DataSource):
 
 
 class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
-
     def __init__(self, _schema, options):
         """
         Initialize the MQTT simple stream reader with configuration options.
@@ -129,7 +128,7 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
 
         if self.clean_session not in [True, False]:
             raise ValueError(f"Unsupported session: {self.clean_session}")
-        self.client_id = f'spark-data-source-mqtt-{random.randint(0, 1000000)}'
+        self.client_id = f"spark-data-source-mqtt-{random.randint(0, 1000000)}"
         self.current = 0
         self.new_data = []
 
@@ -191,13 +190,13 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
             return False
 
         # Remove trailing dot if present
-        if hostname.endswith('.'):
+        if hostname.endswith("."):
             hostname = hostname[:-1]
 
         # Hostname regex pattern
         # Allows letters, numbers, hyphens, and dots
         # Must start and end with alphanumeric characters
-        hostname_pattern = re.compile(r'^(?!-)(?:[a-zA-Z0-9-]{1,63}(?<!-)\.)*[a-zA-Z0-9-]{1,63}(?<!-)$')
+        hostname_pattern = re.compile(r"^(?!-)(?:[a-zA-Z0-9-]{1,63}(?<!-)\.)*[a-zA-Z0-9-]{1,63}(?<!-)$")
 
         return bool(hostname_pattern.match(hostname))
 
