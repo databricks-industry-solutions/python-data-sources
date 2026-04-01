@@ -6,18 +6,11 @@ import re
 import time
 
 import paho.mqtt.client as mqttClient
-from pyspark.sql.datasource import DataSource, InputPartition, SimpleDataSourceStreamReader
+from pyspark.sql.datasource import DataSource, SimpleDataSourceStreamReader
 from pyspark.sql.types import StringType, StructField, StructType
+from python_data_sources.common.range_partition import RangePartition
 
-logging.basicConfig()
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-
-class RangePartition(InputPartition):
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
 
 
 class MqttDataSource(DataSource):
@@ -135,7 +128,7 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
         self._validate_input_parameters()
 
         if self.clean_session not in [True, False]:
-            raise ValueError(f"Unsupported sesion: {self.clean_session}")
+            raise ValueError(f"Unsupported session: {self.clean_session}")
         self.client_id = f'spark-data-source-mqtt-{random.randint(0, 1000000)}'
         self.current = 0
         self.new_data = []
@@ -310,7 +303,7 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
         def on_connect(client, _userdata, _flags, rc):
             if rc == 0:
                 client.subscribe(self.topic, qos=self.qos)
-                logger.warning(f"Connected to broker {self.broker_address} on port {self.port} with topic {self.topic}")
+                logger.info(f"Connected to broker {self.broker_address} on port {self.port} with topic {self.topic}")
             else:
                 logger.error(
                     f"Connection failed to broker {self.broker_address} on port {self.port} with topic {self.topic}"
@@ -325,7 +318,7 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
                 message.qos,
                 message.retain,
             ]
-            logger.warning(msg_data)
+            logger.info("Read message payload from broker")
             self.new_data.append(msg_data)
 
         mqtt_client.on_connect = on_connect
@@ -357,7 +350,6 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
 
         mqtt_client.loop_stop()  # Stop the loop after the timeout
         mqtt_client.disconnect()
-        logger.warning(f"current state of data: {self.new_data}")
 
         return iter(self.new_data)
 

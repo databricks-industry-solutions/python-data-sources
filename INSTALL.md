@@ -59,10 +59,12 @@ from python_data_sources.mcap import MCAPDataSource
 spark = SparkSession.builder.getOrCreate()
 spark.dataSource.register(MCAPDataSource)
 
-df = spark.read.format("mcap")
+df = (
+    spark.read.format("mcap")
     .option("path", "/path/to/data.mcap")
     .option("numPartitions", "4")
     .load()
+)
 ```
 
 ### MQTT
@@ -74,12 +76,14 @@ from python_data_sources.mqtt import MqttDataSource
 spark = SparkSession.builder.getOrCreate()
 spark.dataSource.register(MqttDataSource)
 
-df = spark.readStream.format("mqtt_pub_sub") \
-    .option("broker_address", "mqtt.example.com") \
-    .option("topic", "sensors/#") \
-    .option("username", "user") \
-    .option("password", "pass") \
+df = (
+    spark.readStream.format("mqtt_pub_sub")
+    .option("broker_address", "mqtt.example.com")
+    .option("topic", "sensors/#")
+    .option("username", "user")
+    .option("password", "pass")
     .load()
+)
 ```
 
 ### ZipDCM
@@ -91,7 +95,9 @@ from python_data_sources.zipdcm import ZipDCMDataSource
 spark = SparkSession.builder.getOrCreate()
 spark.dataSource.register(ZipDCMDataSource)
 
-df = spark.read.format("zipdcm") \
-    .option("numPartitions", "2") \
+df = (
+    spark.read.format("zipdcm")
+    .option("numPartitions", "2")
     .load("/path/to/dicom_files.zip")
+)
 ```

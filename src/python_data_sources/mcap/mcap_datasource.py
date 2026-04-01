@@ -161,7 +161,7 @@ class MCAPDataSourceReader(DataSourceReader):
         self.options = options
         self.path = self.options.get("path", None)
         self.pathGlobFilter = self.options.get("pathGlobFilter", DEFAULT_PATH_GLOB_FILTER)
-        self.recursiveFileLookup = bool(self.options.get("recursiveFileLookup", "false"))
+        self.recursiveFileLookup = self.options.get("recursiveFileLookup", "false").strip().lower() == "true"
         self.numPartitions = int(self.options.get("numPartitions", DEFAULT_NUM_PARTITIONS))
         self.topicFilter = self.options.get("topicFilter", None)
 
@@ -169,7 +169,8 @@ class MCAPDataSourceReader(DataSourceReader):
         if self.topicFilter == "*":
             self.topicFilter = None
 
-        assert self.path is not None, "path option is required"
+        if self.path is None:
+            raise ValueError("No value for required option 'path'")
         self.paths = path_handler(self.path, self.pathGlobFilter, recursive=self.recursiveFileLookup)
 
         if not self.paths:
@@ -210,8 +211,10 @@ class MCAPDataSourceReader(DataSourceReader):
             f"MCAPDataSourceReader.read({partition}, {self.path}, paths: {self.paths}, topicFilter: {self.topicFilter})"
         )
 
-        assert self.path is not None, f"path: {self.path}"
-        assert self.paths is not None, f"paths: {self.paths}"
+        if self.path is None:
+            raise ValueError(f"Missing path '{self.path}'")
+        if self.paths is None:
+            raise ValueError(f"Missing paths '{self.paths}'")
 
         # Library imports must be within the method for executor-level execution
         return _read_mcap_partition(partition, self.paths, topic_filter=self.topicFilter)

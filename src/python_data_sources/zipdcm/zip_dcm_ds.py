@@ -32,11 +32,12 @@ class ZipDCMDataSourceReader(DataSourceReader):
         self.options = options
         self.path = self.options.get("path", None)
         self.pathGlobFilter = self.options.get("pathGlobFilter", "*.zip")
-        self.recursiveFileLookup = bool(self.options.get("recursiveFileLookup", "false"))
+        self.recursiveFileLookup = self.options.get("recursiveFileLookup", "false").strip().lower() == "true"
         self.numPartitions = int(self.options.get("numPartitions", DEFAULT_NUM_PARTITIONS))
         self.deep = False
         self.dicom_keys_filter = self.options.get("dicomKeysFilter", DEFAULT_DICOM_KEYS_FILTER).split(",")
-        assert self.path is not None
+        if self.path is None:
+            raise ValueError("Missing required option 'path'")
         self.paths = path_handler(self.path, self.pathGlobFilter)
 
     def partitions(self) -> Sequence[RangePartition]:
@@ -54,8 +55,10 @@ class ZipDCMDataSourceReader(DataSourceReader):
         """
         logger.debug(f"ZipDCMDataSourceReader.read({partition},{self.path}, paths:{self.paths}):")
 
-        assert self.path is not None, f"path: {self.path}"
-        assert self.paths is not None, f"path: {self.path}"
+        if self.path is None:
+            raise ValueError(f"Missing path '{self.path}'")
+        if self.paths is None:
+            raise ValueError(f"Missing path '{self.path}'")
 
         # Library imports must be within the method.
         return readzipdcm(partition, self.paths, self.dicom_keys_filter)

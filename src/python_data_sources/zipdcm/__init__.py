@@ -4,7 +4,7 @@ from python_data_sources.zipdcm.zip_dcm_ds import (
     ZipDCMDataSource,
     ZipDCMDataSourceReader,
 )
-from python_data_sources.zipdcm.zip_dcm_utils import RangePartition
+from python_data_sources.common.range_partition import RangePartition
 
 __all__ = [
     "ZipDCMDataSource",

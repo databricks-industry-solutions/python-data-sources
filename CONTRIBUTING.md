@@ -15,8 +15,8 @@ If you are contributing on behalf of an organization, you confirm that you have 
 
 ### Best Practices
 1. Each data source should function independently of other data sources.
-2. Each data source should be implemented in a subfolder of `/src`, e.g. `src/zipdcm`. The folder name should be the shortname of your data source. 
-3. Each data source must implement tests in a subfolder of `/tests`, e.g. `/tests/zipdcm`. The folder name should be the shortname of the data source. 
+2. Each data source should be implemented in a subfolder of `/src`, e.g. `src/python_data_sources/zipdcm`. The folder name should be the shortname of your data source. 
+3. Each data source must implement tests in a subfolder of `/tests`, e.g. `/tests/unit/zipdcm`. The folder name should be the shortname of the data source. 
 4. Each data source must list dependencies in its own section of `project.optional-dependencies` in `pyproject.toml`. 
 5. Each data source must specify its own development and test environment in the `tools.hatch.envs` section of `pyproject.toml`. This includes any dependencies and pytest commands necessary to run tests. 
 6. Each data source must include a `README.md` which describes the data source and shows example usage. 

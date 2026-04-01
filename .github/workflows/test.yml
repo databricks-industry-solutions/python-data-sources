@@ -7,6 +7,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   # NOTE: Ensures code is properly formatted
   fmt:
@@ -113,9 +116,11 @@ jobs:
           pip install hatch
 
       - name: Run tests for ${{ matrix.submodule }}
+        env:
+          SUBMODULE: ${{ matrix.submodule }}
         run: |
-          echo "Running tests for ${{ matrix.submodule }}"
-          hatch run test-${{ matrix.submodule }}:test
+          echo "Running tests for ${SUBMODULE}"
+          hatch run "test-${SUBMODULE}:test"
 
   # NOTE: Runs all tests on push to the main branch
   test-all:
@@ -145,13 +150,13 @@ jobs:
       - name: Run all tests
         run: |
           echo "Running MCAP tests..."
-          hatch run test-mcap:test || true
+          hatch run test-mcap:test
 
           echo "Running MQTT tests..."
-          hatch run test-mqtt:test || true
+          hatch run test-mqtt:test
 
           echo "Running ZipDCM tests..."
-          hatch run test-zipdcm:test || true
+          hatch run test-zipdcm:test
 
   test-summary:
     needs: [detect-changes, test, test-all]
@@ -197,9 +202,6 @@ jobs:
       - name: Run e2e Tests
         run: |
           echo "Running e2e tests..."
-          echo "Databricks host: $DATABRICKS_HOST"
-          echo "Databricks cluster ID: $DATABRICKS_CLUSTER_ID"
-          echo "Databricks client ID: $DATABRICKS_CLIENT_ID"
           hatch run test-all:e2e
         env:
           REF_NAME: ${{ github.ref_name }}

@@ -85,7 +85,9 @@ dependencies = [
     "paho-mqtt>=2.1.0",
     "protobuf>=6.33.0",
     "pydicom>=3.0.1",
-    "pylibjpeg[all]>=2.0.1",
+    "pylibjpeg>=2.0.1",
+    "pylibjpeg-openjpeg>=2.0.1",
+    "pylibjpeg-rle>=2.0.1",
     "pylint~=3.3.1",
     "pylint-pytest==2.0.0a0",
     "pyspark>=4.0.0.dev1",
@@ -145,7 +147,9 @@ dependencies = [
     "pytest-mock>=3.10.0",
     "pyspark>=4.0.0.dev1",
     "pydicom>=3.0.1",
-    "pylibjpeg[all]>=2.0.1",
+    "pylibjpeg>=2.0.1",
+    "pylibjpeg-openjpeg>=2.0.1",
+    "pylibjpeg-rle>=2.0.1",
     "pyarrow>=14.0.0",
     "pandas>=2.0.0",
 ]
@@ -560,7 +564,7 @@ indent-after-paren = 4
 indent-string = "    "
 
 # Maximum number of characters on a single line.
-max-line-length = 100
+max-line-length = 120
 
 # Maximum number of lines in a module.
 max-module-lines = 10000

@@ -6,11 +6,11 @@
 
 Introduced in Spark 4.x, Python Data Source API allows you to create PySpark Data Sources leveraging long standing python libraries for handling unique file types or specialized interfaces with spark read, readStream, write and writeStream APIs.
 
-| Data Source Name | Purpose |
-| --- | --- |
-| [mcap](mcap/README.md) | Read MCAP (ROS 2 bag) files |
-| [mqtt](mqtt/README.md) | Stream data from MQTT brokers |
-| [zipdcm](zipdcm/README.md) | Read DICOM files from Zip file archives |
+| Data Source Name                                   | Purpose                                 |
+|----------------------------------------------------|-----------------------------------------|
+| [mcap](src/python_data_sources/mcap/README.md)     | Read MCAP (ROS 2 bag) files             |
+| [mqtt](src/python_data_sources/mqtt/README.md)     | Stream data from MQTT brokers           |
+| [zipdcm](src/python_data_sources/zipdcm/README.md) | Read DICOM files from Zip file archives |
 
 ## Installation
 
@@ -119,9 +119,11 @@ python-data-sources/
 │       ├── mqtt/               # MQTT streaming data source
 │       └── zipdcm/             # ZipDCM data source
 ├── tests/
-│   ├── mcap/                   # MCAP tests
-│   ├── mqtt/                   # MQTT tests
-│   └── zipdcm/                 # ZipDCM tests
+|   └── unit/
+│       ├── common/             # Common module tests
+│       ├── mcap/               # MCAP tests
+│       ├── mqtt/               # MQTT tests
+│       └── zipdcm/             # ZipDCM tests
 └── .github/workflows/
     └── test.yml                # CI/CD workflow
 ```
@@ -139,10 +141,10 @@ See [CONTRIBUTING.md](https://github.com/databricks-industry-solutions/python-da
 
 &copy; 2025 Databricks, Inc. All rights reserved. The source in this project is provided subject to the Databricks License [https://databricks.com/db-license-source]. All included or referenced third party libraries are subject to the licenses set forth below.
 
-| Datasource | Package    | Purpose                           | License     | Source                               |
-| ---------- | ---------- | --------------------------------- | ----------- | ------------------------------------ |
-| mcap       | mcap       | Python API for MCAP files         | MIT         | https://github.com/foxglove/mcap     |
-| mcap       | protobuf   | Protocol Buffers support          | BSD-3       | https://github.com/protocolbuffers/protobuf |
-| mqtt       | paho-mqtt  | MQTT client library               | EPL-2.0     | https://github.com/eclipse/paho.mqtt.python |
-| zipdcm     | pydicom    | Python API for DICOM files        | MIT         | https://github.com/pydicom/pydicom   |
-| zipdcm     | pylibjpeg  | Decoding / Encoding pixel formats | GPLv3 & MIT | https://github.com/pydicom/pylibjpeg |
+| Datasource | Package    | Purpose                           | License                   | Source                                      |
+| ---------- | ---------- | --------------------------------- |---------------------------|---------------------------------------------|
+| mcap       | mcap                  | Python API for MCAP files         | MIT                        | https://github.com/foxglove/mcap            |
+| mcap       | mcap-protobuf-support | Protobuf schema support           | MIT                        | https://github.com/foxglove/mcap            |
+| mqtt       | paho-mqtt             | MQTT client library               | EPL-2.0 / EDL-1.0 (BSD-3) | https://github.com/eclipse/paho.mqtt.python |
+| zipdcm     | pydicom               | Python API for DICOM files        | MIT                        | https://github.com/pydicom/pydicom          |
+| zipdcm     | pylibjpeg             | Decoding / Encoding pixel formats | MIT                        | https://github.com/pydicom/pylibjpeg        |

@@ -90,7 +90,7 @@ def path_handler(path: str, pathGlobFilter="*.zip", recursiveFileLookup=True) ->
     # TODO: Explore how to partition a single large Zip file
     #
     if path is None:
-        raise ValueError("path parmeter is None")
+        raise ValueError("path parameter is None")
 
     p = Path(path)
     if not p.exists():
