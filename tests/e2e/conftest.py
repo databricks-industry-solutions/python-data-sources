@@ -25,7 +25,7 @@ def library_ref() -> str:
     test_library_ref = "git+https://github.com/databricks-industry-solutions/python-data-sources"
     if os.getenv("REF_NAME"):
         test_library_ref = f"{test_library_ref}.git@refs/pull/{os.getenv('REF_NAME')}"
-    return test_library_ref
+    return f"{test_library_ref}.git@{os.getenv('REF_NAME')}"
 
 
 def validate_run_status(run: Run, client: WorkspaceClient) -> None:

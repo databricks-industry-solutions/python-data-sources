@@ -114,7 +114,7 @@ class MqttSimpleStreamReader(SimpleDataSourceStreamReader):
         self.password = options.get("password", "")
         self.qos = int(options.get("qos", 2))
         self.keep_alive = int(options.get("keepalive", 60))
-        self.clean_session = options.get("clean_session", False)
+        self.clean_session = options.get("clean_session", "false").strip().lower() == "true"
         self.conn_timeout = int(options.get("conn_time", 1))
         self.tls_certs = {
             "ca_certs": options.get("ca_certs", None),

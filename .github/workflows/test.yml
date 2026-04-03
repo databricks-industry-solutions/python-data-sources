@@ -117,13 +117,16 @@ jobs:
     needs: [detect-changes, test, test-all]
     if: always()
     runs-on: ubuntu-latest
+    env:
+      HAS_CHANGES: ${{ needs.detect-changes.outputs.has-changes }}
+      SUBMODULES: ${{ needs.detect-changes.outputs.submodules }}
 
     steps:
       - name: Check test results
         run: |
           echo "Test workflow completed"
-          echo "Changes detected: ${{ needs.detect-changes.outputs.has-changes }}"
-          echo "Submodules tested: ${{ needs.detect-changes.outputs.submodules }}"
+          echo "Changes detected: ${HAS_CHANGES}"
+          echo "Submodules tested: ${SUBMODULES}"
 
           if [ "${{ needs.test.result }}" = "failure" ] || [ "${{ needs.test-all.result }}" = "failure" ]; then
             echo "Some tests failed!"
