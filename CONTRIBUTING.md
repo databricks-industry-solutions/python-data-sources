@@ -29,6 +29,16 @@ If you are contributing on behalf of an organization, you confirm that you have 
 13. Error & Exception handling is critical. Exceptions must include a helpful message but must mask sensitive data (e.g. connection strings or credentials). 
 14. All code must pass formatting and linting before it can be merged into the main repository. Run `make fmt` locally to validate code formatting.
 
+### Adding a Data Source
+To add a new data source (shortname `<source>`):
+
+1. Create `src/python_data_sources/<source>/` and add the data source implementation, along with `__init__.py`, `README.md`, and `LICENSE.md`.
+2. Create `tests/unit/<source>/` and add unit tests covering the implementation.
+3. Create `examples/<source>/` with a `<source>-demo` notebook, and `tests/e2e/<source>/` with an end-to-end notebook test that runs the demo in a Databricks workspace.
+4. In `pyproject.toml`, add a `<source>` entry to `[project.optional-dependencies]`, a `[tool.hatch.envs.test-<source>]` section declaring the module's dependencies, and a matching `[tool.hatch.envs.test-<source>.scripts]` section defining at least `test = "pytest tests/unit/<source> -v {args}"`.
+5. Add `<source>` to `ALLOWED_SUBMODULES` in `.github/scripts/detect_changed_submodules.sh` so the CI test matrix picks it up.
+6. Update `README.md` (capabilities table and data source summary) and `INSTALL.md` (install instructions for the new optional dependency group).
+
 ### Submitting a Contribution
 If you'd like to contribute to `python-data-sources`, please create a pull request or open an issue on the repository. To submit a pull request:
 
