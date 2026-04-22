@@ -49,39 +49,9 @@ jobs:
 
       - name: Check if any submodules changed
         id: check
-        run: |
-          CHANGED='${{ steps.detect.outputs.changed-directories }}'
-          echo "Changed directories: $CHANGED"
-
-          # Extract unique submodule names from paths like:
-          # - src/python_data_sources/<submodule>
-          # - tests/<submodule>
-          SUBMODULES=$(echo "$CHANGED" | jq -r '
-            [.[] |
-              # Extract from src/python_data_sources/<submodule>
-              (capture("src/python_data_sources/(?<name>[^/]+)") | .name),
-              # Extract from tests/<submodule>
-              (capture("tests/unit/(?<name>[^/]+)") | .name)
-            ] |
-            # Remove nulls and get unique values
-            map(select(. != null)) |
-            unique |
-            # Filter out common files (conftest, etc.)
-            map(select(. != "conftest.py" and . != "__pycache__"))
-          ')
-
-          if [ -z "$SUBMODULES" ] || [ "$SUBMODULES" = "null" ] || [ "$SUBMODULES" = "[]" ]; then
-            SUBMODULES="[]"
-          fi
-
-          COMPACT_SUBMODULES=$(echo "$SUBMODULES" | jq -c '.')
-          echo "submodules=$COMPACT_SUBMODULES" >> $GITHUB_OUTPUT
-
-          if [ "$COMPACT_SUBMODULES" = "[]" ]; then
-            echo "has-changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "has-changes=true" >> $GITHUB_OUTPUT
-          fi
+        env:
+          CHANGED_DIRECTORIES: ${{ steps.detect.outputs.changed-directories }}
+        run: .github/scripts/detect_changed_submodules.sh
 
       - name: Output detected submodules
         run: |
