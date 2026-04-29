@@ -1,5 +1,6 @@
 # Databricks Asset Bundle files
 .databricks/
+databricks.yml
 
 # IDE files
 .vscode/
@@ -24,4 +25,5 @@ build/
 
 # Environment files
 .env
-.env.local 
+.env.local
+.venv/*

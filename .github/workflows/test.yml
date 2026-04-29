@@ -1,0 +1,181 @@
+name: Test Python Data Sources
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  # NOTE: Ensures code is properly formatted
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Format all files
+        run: make dev fmt
+
+      - name: Fail on differences
+        run: git diff --exit-code
+
+  # NOTE: Detects newly created or modified data sources
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      submodules: ${{ steps.check.outputs.submodules }}
+      has-changes: ${{ steps.check.outputs.has-changes }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+
+      - name: List changed directories
+        id: detect
+        uses: sankichi92/list-changed-directories@1a7ce7073846c0f941d2d3dd7597974022907889
+        with:
+          target-file: __init__.py
+          common-dependency-paths: |-
+            pyproject.toml
+            src/python_data_sources/__init__.py
+            .github/workflows/test.yml
+
+      - name: Check if any submodules changed
+        id: check
+        env:
+          CHANGED_DIRECTORIES: ${{ steps.detect.outputs.changed-directories }}
+        run: .github/scripts/detect_changed_submodules.sh
+
+      - name: Output detected submodules
+        run: |
+          echo "Changed directories: ${{ steps.detect.outputs.changed-directories }}"
+          echo "Submodules to test: ${{ steps.check.outputs.submodules }}"
+          echo "Has changes: ${{ steps.check.outputs.has-changes }}"
+
+  # NOTE: Runs tests of the created or modified data sources; Tests of unmodified data sources are skipped for convenience
+  test:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has-changes == 'true'
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        submodule: ${{ fromJSON(needs.detect-changes.outputs.submodules) }}
+        python-version: ['3.12']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Hatch
+        run: |
+          pip install --upgrade pip
+          pip install hatch
+
+      - name: Run tests for ${{ matrix.submodule }}
+        env:
+          SUBMODULE: ${{ matrix.submodule }}
+        run: |
+          echo "Running tests for ${SUBMODULE}"
+          hatch run "test-${SUBMODULE}:test"
+
+  # NOTE: Runs all tests on push to the main branch
+  test-all:
+    needs: detect-changes
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Hatch
+        run: |
+          pip install --upgrade pip
+          pip install hatch
+
+      - name: Run all tests
+        run: |
+          echo "Running MCAP tests..."
+          hatch run test-mcap:test
+
+          echo "Running MQTT tests..."
+          hatch run test-mqtt:test
+
+          echo "Running ZipDCM tests..."
+          hatch run test-zipdcm:test
+
+  test-summary:
+    needs: [detect-changes, test, test-all]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check test results
+        run: |
+          echo "Test workflow completed"
+          echo "Changes detected: ${{ needs.detect-changes.outputs.has-changes }}"
+          echo "Submodules tested: ${{ needs.detect-changes.outputs.submodules }}"
+
+          if [ "${{ needs.test.result }}" = "failure" ] || [ "${{ needs.test-all.result }}" = "failure" ]; then
+            echo "Some tests failed!"
+            exit 1
+          else
+            echo "All tests passed!"
+          fi
+
+  # NOTE: Tests any example notebooks in '/examples' by running them in a test workspace; Will not be run from forks (e.g. from external contributors)
+  e2e:
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft && !github.event.pull_request.head.repo.fork
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          cache: 'pip'
+          cache-dependency-path: '**/pyproject.toml'
+          python-version: '3.12'
+
+      - name: Install Hatch
+        run: |
+          pip install --upgrade pip
+          pip install hatch
+
+      - name: Run e2e Tests
+        run: |
+          echo "Running e2e tests..."
+          hatch run test-all:e2e
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+          DATABRICKS_WAREHOUSE_ID: ${{ secrets.DATABRICKS_WAREHOUSE_ID }}

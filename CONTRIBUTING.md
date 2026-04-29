@@ -14,22 +14,38 @@ By submitting a contribution to this repository, you certify that:
 If you are contributing on behalf of an organization, you confirm that you have the authority to do so. You agree to confirm these terms in your pull request. Any request that does not explicitely accept the terms will be assumed to have accepted. 
 
 ### Best Practices
-1. Put data source into subfolder of root, e.g. `$/zipdcm`. Folder name is the shortname of your data source
-2. Every data source should live under the `dbx` package name. We may consider another sub-domain, e.g. `dbx.pds.<datasource short name>`
-3. Each connector lives some what independently, one connector doesn't break another.
-4. Each connector supports `Python 3.12`
-5. Each connector should have inline python docs to help out IDEs, AIs in connector usage.
-6. Error & Exception handling is critical. Start with input arguments. For exceptions, please include context except for where context could be sensitive (e.g. secrets)
-7. Meets style guideline is required (`black`, `isort`, ...)
-8. Add a Makefile with standard actions, e.g. dev, style, check, test, ...
-9. Every data source should have unit tests.
-10. Every data source should have an integration test, include open data set file examples, a downloader, or a setup script
-11. Every data source should have a `<data source name>-demo.ipynb` demo notebook
-12. Every data source has a README.md
-13. Every data source has a LICENSE.md file. Please ensure legal signs off on this. sub-components should be open source best case. Worst case, provide a downloader for a proprietary component. Do not package propietary components into this repo. Ask if in doubt.
-14. Every data source provides BYOL, bring your own lineage, this will distinguish these data sources from data sources for any other platform
-15. The main readme should summarize the connector's capabilities, perhaps with a check mark system for capabilities (e.g. :check:Read :check:Write :check:Readstream :check:Writestream)
-16. Support `pip install databricks-python-data-source[<shortname>]` where user selects individual connectors to install, avoid pulling in a mass of dependencies their use case doesn't need.
-17. Support installing from github.
-18. Support running after creating a github folder in Databricks.
-19. In connector README.md, and demo notebook, please document compute requirements and other environmental requirements.
+1. Each data source should function independently of other data sources.
+2. Each data source should be implemented in a subfolder of `/src`, e.g. `src/python_data_sources/zipdcm`. The folder name should be the shortname of your data source. 
+3. Each data source must implement tests in a subfolder of `/tests`, e.g. `/tests/unit/zipdcm`. The folder name should be the shortname of the data source. 
+4. Each data source must list dependencies in its own section of `project.optional-dependencies` in `pyproject.toml`. 
+5. Each data source must specify its own development and test environment in the `tools.hatch.envs` section of `pyproject.toml`. This includes any dependencies and pytest commands necessary to run tests. 
+6. Each data source must include a `README.md` which describes the data source and shows example usage. 
+7. Each data source must include a `<data source name>-demo.py` demo notebook which details example usage. 
+8. Each data source must include a `LICENSE.md` file approved by Databricks' legal team. Use open source subcomponents whenever possible. If proprietary components (e.g. external libraries) are required, provide a downloader method. Do not package proprietary components into data sources. 
+9. Each data source must provide BYOL ("Bring Your Own Lineage"). This should distinguish the data sources from sources for other platforms. 
+10. Each data source's capabilities should be summarized and added to the main `README.md` Add check marks for specific capabilities (e.g. :check:Read :check:Write :check:Readstream :check:Writestream)
+11. Each data source's compute requirements, environment requirements, and any limitations should be documented in its `README.md` and demo notebook. 
+12. All public methods should have Python docstrings. Format docstrings using the standards detailed in the [Google Python style guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings). 
+13. Error & Exception handling is critical. Exceptions must include a helpful message but must mask sensitive data (e.g. connection strings or credentials). 
+14. All code must pass formatting and linting before it can be merged into the main repository. Run `make fmt` locally to validate code formatting.
+
+### Adding a Data Source
+To add a new data source (shortname `<source>`):
+
+1. Create `src/python_data_sources/<source>/` and add the data source implementation, along with `__init__.py`, `README.md`, and `LICENSE.md`.
+2. Create `tests/unit/<source>/` and add unit tests covering the implementation.
+3. Create `examples/<source>/` with a `<source>-demo` notebook, and `tests/e2e/<source>/` with an end-to-end notebook test that runs the demo in a Databricks workspace.
+4. In `pyproject.toml`, add a `<source>` entry to `[project.optional-dependencies]`, a `[tool.hatch.envs.test-<source>]` section declaring the module's dependencies, and a matching `[tool.hatch.envs.test-<source>.scripts]` section defining at least `test = "pytest tests/unit/<source> -v {args}"`.
+5. Add `<source>` to `ALLOWED_SUBMODULES` in `.github/scripts/detect_changed_submodules.sh` so the CI test matrix picks it up.
+6. Update `README.md` (capabilities table and data source summary) and `INSTALL.md` (install instructions for the new optional dependency group).
+
+### Submitting a Contribution
+If you'd like to contribute to `python-data-sources`, please create a pull request or open an issue on the repository. To submit a pull request:
+
+1. Fork the `python-data-sources` repository
+2. Clone your forked repository locally (`git clone <Your repository URL>`)
+3. Update from the main branch (`git checkout main && git pull`)
+4. Create a branch for your changes (`git checkout -b <Your feature name>`)
+5. Once your changes are finished, run `make fmt` in your IDE terminal and fix any reported issues
+6. Commit and push your changes (`git commit -S -a -m "<Description of the changes> && git push origin <Your feature name>`)
+7. Open your PR using the GitHub web UI or CLI
