@@ -7,19 +7,19 @@ repos:
         language: system
         types: [ python ]
         require_serial: true
-        files: ^(src/python_data_sources/zipdcm/|tests/unit/zipdcm/)
+        files: ^(src/python_data_sources/|tests/)
       - id: isort
         args: [--combine-as]
         name: isort
         entry: isort
         language: system
         types: [ python ]
-        files: ^(src/python_data_sources/zipdcm/|tests/unit/zipdcm/)
+        files: ^(src/python_data_sources/|tests/)
         require_serial: true
       - id: black
         name: black
-        entry: black --line-length 100
+        entry: black --line-length 120
         language: system
         types: [ python ]
         require_serial: true
-        files: ^(src/python_data_sources/zipdcm/|tests/unit/zipdcm/)
+        files: ^(src/python_data_sources/|tests/)
