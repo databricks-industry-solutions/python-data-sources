@@ -1,4 +1,4 @@
-.PHONY: all clean dev fmt lint test coverage lock verify-lock build
+.PHONY: all clean dev fmt lint test coverage lock-dependencies verify-lock build
 
 all: clean lint fmt test
 
