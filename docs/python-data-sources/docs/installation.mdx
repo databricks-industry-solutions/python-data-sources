@@ -1,0 +1,49 @@
+---
+sidebar_position: 1
+---
+
+# Installation
+
+`python-data-sources` is published to PyPI. Each connector is shipped as an optional extra so you only install what you need.
+
+## Requirements
+
+- Python `>=3.12,<3.14`
+- PySpark `>=4.0.0.dev1` (the new Python DataSource API is required)
+
+## Install a single connector
+
+```bash
+pip install "python-data-sources[mcap]"     # MCAP robotics logs
+pip install "python-data-sources[mqtt]"     # MQTT streaming
+pip install "python-data-sources[zipdcm]"   # DICOM in ZIP
+```
+
+## Install everything
+
+```bash
+pip install "python-data-sources[all]"
+```
+
+## Using uv
+
+```bash
+uv add "python-data-sources[mcap]"
+```
+
+## Register the data source in Spark
+
+Each connector is a `pyspark.sql.datasource.DataSource` subclass. Register the ones you want before reading:
+
+```python
+from pyspark.sql import SparkSession
+from python_data_sources.mcap import McapDataSource
+
+spark = SparkSession.builder.getOrCreate()
+spark.dataSource.register(McapDataSource)
+
+df = spark.read.format("mcap").load("/path/to/logs/")
+df.show()
+```
+
+See the [API reference](/docs/reference) for the full list of registered data sources and their options.

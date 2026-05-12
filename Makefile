@@ -1,4 +1,4 @@
-.PHONY: all clean dev fmt lint test coverage lock-dependencies verify-lock build
+.PHONY: all clean dev fmt lint test coverage lock-dependencies verify-lock build docs-install docs-build docs-serve docs-serve-dev docs-clean
 
 all: clean lint fmt test
 
@@ -6,7 +6,7 @@ export UV_FROZEN := 1
 
 UV_RUN := uv run --exact --all-extras
 
-clean:
+clean: docs-clean
 	rm -fr .venv clean htmlcov .pytest_cache .ruff_cache .coverage coverage.xml dist
 	find . -name '__pycache__' -print0 | xargs -0 rm -fr
 
@@ -55,3 +55,21 @@ coverage:
 
 e2e:
 	$(UV_RUN) pytest -rs --timeout 30 tests/e2e
+
+docs-install:
+	yarn --cwd docs/python-data-sources install --frozen-lockfile
+
+docs-build:
+	uv run --group docs pydoc-markdown
+	yarn --cwd docs/python-data-sources build
+
+docs-serve-dev:
+	uv run --group docs pydoc-markdown
+	yarn --cwd docs/python-data-sources start
+
+docs-serve: docs-build
+	yarn --cwd docs/python-data-sources serve
+
+docs-clean:
+	rm -rf docs/python-data-sources/build docs/python-data-sources/.docusaurus docs/python-data-sources/.cache
+	find docs/python-data-sources/docs/reference/api -mindepth 1 -not -name 'index.mdx' -exec rm -rf {} +

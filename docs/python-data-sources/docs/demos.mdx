@@ -1,0 +1,26 @@
+---
+sidebar_position: 3
+---
+
+# Demos
+
+The repository ships runnable example notebooks under [`examples/`](https://github.com/databricks-industry-solutions/python-data-sources/tree/main/examples). GitHub renders Jupyter notebooks inline, so the links below land on a readable view you can also download or open directly in Databricks.
+
+## ZipDICOM — read DICOM imagery from a ZIP archive
+
+Walks through registering the `zipdcm` data source, reading a ZIP of DICOM files into a DataFrame, and accessing the pixel arrays.
+
+➡️ [`examples/zipdcm/zip-dicom-demo.ipynb`](https://github.com/databricks-industry-solutions/python-data-sources/blob/main/examples/zipdcm/zip-dicom-demo.ipynb)
+
+## Running an example in Databricks
+
+1. Clone the repo (or fork it) and open the notebook in your Databricks workspace via **Workspace → Import → URL** using the raw GitHub URL.
+2. Install the matching connector extra on your cluster:
+   ```bash
+   %pip install "python-data-sources[zipdcm]"
+   ```
+3. Restart the Python interpreter (`dbutils.library.restartPython()`) and run the cells in order.
+
+## Contributing a new demo
+
+New demos are welcome. Place the notebook under `examples/<connector>/` and reference it from this page — see [`CONTRIBUTING.md`](https://github.com/databricks-industry-solutions/python-data-sources/blob/main/CONTRIBUTING.md) for the full process.
