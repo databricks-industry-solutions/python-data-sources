@@ -1,29 +1,25 @@
 ---
-sidebar_position: 2
+sidebar_position: 1
 ---
 
 # Motivation
 
-Apache Spark ships native readers for the formats most analytics workloads encounter — Parquet, JSON, CSV, Avro, Delta, JDBC, Kafka. Outside of that mainstream, the long tail of file formats and streaming protocols is mostly served by a patchwork of one-off scripts, JVM connectors that are hard to install, or bespoke ingest jobs that re-parse data byte by byte.
+Apache Spark ships native data sources commonly used in analytics workloads. The long tail of data sources is not covered by 
+standard Spark capabilities and is served by a patchwork of Java libraries or user-defined functions that are difficult to maintain.
 
-The [PySpark DataSource API](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/datasource.html) introduced in Spark 4.0 changes that: any Python class can implement `DataSourceReader` / `DataSourceWriter` and be addressed by `spark.read.format(...)`. **`python-data-sources` is a collection of those Python-native connectors** for formats and protocols that don't have a built-in Spark reader.
+The [PySpark DataSource API](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/datasource.html) allows users to implement and register Spark data source formats using `spark.read.format(...)`. 
+Sources that implement `DataSourceReader` and `DataSourceWriter` contracts can be used to read or write data with Spark.
 
-## What it covers today
+**python-data-sources** is a collection of Python-native connectors for formats and protocols that don't have a built-in Spark reader.
 
-| Connector | Read | Stream | Notes |
-| --- | :-: | :-: | --- |
-| `mcap` | ✓ | — | MCAP container format used for robotics, AV, and ROS bag logs. |
-| `mqtt` | — | ✓ | MQTT broker as a Structured Streaming source. |
-| `zipdcm` | ✓ | — | DICOM medical images packaged inside ZIP archives. |
+## Connectors
 
-## Why a single repo
+| Connector | Read | Write  | Notes                                                          |
+|-----------|------|--------|----------------------------------------------------------------|
+| `mcap`    | ✓    | —      | MCAP container format used for robotics, AV, and ROS bag logs. |
+| `mqtt`    | ✓    | —      | MQTT broker as a Structured Streaming source.                  |
+| `zipdcm`  | ✓    | —      | DICOM medical images packaged inside ZIP archives.             |
 
-- **One Python wheel** with optional extras (`[mcap]`, `[mqtt]`, `[zipdcm]`) so downstream projects pull in exactly the dependencies they need.
-- **Shared utilities** — schema inference helpers, partition planning, and test fixtures live in a `common` module that every connector reuses.
-- **Single test suite** running on every Databricks Runtime Spark version, so a connector that says it works on a given runtime really does.
+## Contributing
 
-## Where it fits
-
-If you're prototyping a new pipeline on Databricks or open-source Spark and need to land MCAP / MQTT / DICOM data into Delta without writing a parser yourself, register the connector and call `spark.read.format("…")`. The output is a normal DataFrame and behaves like any other source — partitioning, schema evolution, and streaming semantics all work the same way.
-
-If you need a connector that isn't here yet, [open an issue](https://github.com/databricks-industry-solutions/python-data-sources/issues) — the contribution process is in the repo's `CONTRIBUTING.md`.
+If you need a connector that isn't provided as a Python Data Source, [open a GitHub issue](https://github.com/databricks-industry-solutions/python-data-sources/issues).

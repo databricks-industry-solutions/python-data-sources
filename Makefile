@@ -29,7 +29,7 @@ verify-lock:
 	if [ -n "$$bad" ]; then \
 		echo "uv.lock contains non-public registry URLs:"; \
 		echo "$$bad"; \
-		echo "Run 'make lock' to regenerate and sanitize."; \
+		echo "Run 'make lock-dependencies' to regenerate and sanitize."; \
 		exit 1; \
 	fi
 
