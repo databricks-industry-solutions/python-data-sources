@@ -1,5 +1,6 @@
 import logging
 import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -20,12 +21,64 @@ def is_in_debug() -> bool:
     return False
 
 
+def _get_local_git_branch() -> str | None:
+    """Get the current git branch name, or None if not available."""
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except Exception:
+        return None
+
+
+def _get_remote_url(branch: str) -> str | None:
+    """Get the git remote URL for the current branch, or None if not available."""
+    try:
+        remote = subprocess.check_output(
+            ["git", "config", f"branch.{branch}.remote"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+        url = subprocess.check_output(
+            ["git", "config", f"remote.{remote}.url"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+        if url.endswith(".git"):
+            url = url[:-4]
+        # Convert SSH URLs to HTTPS so pip can use them (git+git@... is invalid)
+        if url.startswith("git@github.com:"):
+            url = url.replace("git@github.com:", "https://github.com/", 1)
+        return url
+    except Exception:
+        return None
+
+
 @pytest.fixture
 def library_ref() -> str:
-    test_library_ref = "git+https://github.com/databricks-industry-solutions/python-data-sources"
-    if os.getenv("REF_NAME"):
-        test_library_ref = f"{test_library_ref}.git@refs/pull/{os.getenv('REF_NAME')}"
-    return test_library_ref
+    base_ref = "git+https://github.com/databricks-industry-solutions/python-data-sources"
+    is_github_actions = os.getenv("GITHUB_ACTIONS") == "true"
+
+    if is_github_actions:
+        ref_name = os.getenv("REF_NAME")
+        if ref_name:
+            # PR merge refs look like "123/merge"; branch names don't contain "/"
+            if "/" in ref_name:
+                return f"{base_ref}.git@refs/pull/{ref_name}"
+            return f"{base_ref}.git@{ref_name}"
+    else:
+        # Local behavior: use current git branch
+        ref_name = _get_local_git_branch()
+        if ref_name and ref_name != "HEAD":
+            remote_url = _get_remote_url(ref_name)
+            if remote_url:
+                return f"git+{remote_url}.git@{ref_name}"
+            return f"{base_ref}.git@{ref_name}"
+
+    # Default to main branch
+    return base_ref
 
 
 def validate_run_status(run: Run, client: WorkspaceClient) -> None:

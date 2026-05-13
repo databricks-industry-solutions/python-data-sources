@@ -17,16 +17,16 @@ If you are contributing on behalf of an organization, you confirm that you have 
 1. Each data source should function independently of other data sources.
 2. Each data source should be implemented in a subfolder of `/src`, e.g. `src/python_data_sources/zipdcm`. The folder name should be the shortname of your data source. 
 3. Each data source must implement tests in a subfolder of `/tests`, e.g. `/tests/unit/zipdcm`. The folder name should be the shortname of the data source. 
-4. Each data source must list dependencies in its own section of `project.optional-dependencies` in `pyproject.toml`. 
-5. Each data source must specify its own development and test environment in the `tools.hatch.envs` section of `pyproject.toml`. This includes any dependencies and pytest commands necessary to run tests. 
-6. Each data source must include a `README.md` which describes the data source and shows example usage. 
-7. Each data source must include a `<data source name>-demo.py` demo notebook which details example usage. 
-8. Each data source must include a `LICENSE.md` file approved by Databricks' legal team. Use open source subcomponents whenever possible. If proprietary components (e.g. external libraries) are required, provide a downloader method. Do not package proprietary components into data sources. 
-9. Each data source must provide BYOL ("Bring Your Own Lineage"). This should distinguish the data sources from sources for other platforms. 
+4. Each data source must list its runtime and test dependencies in `[project.optional-dependencies]` in `pyproject.toml`. Tests for a single data source are run via `make test-module MODULE=<shortname>`, which invokes `pytest tests/unit/<shortname>`; no per-source environment configuration is required.
+5. After changing dependencies, regenerate `uv.lock` and `.build-constraints.txt` with `make lock-dependencies` (not `uv lock` directly) so that any private registry URLs are stripped before commit and the build-system requirements stay hash-pinned. CI runs `make verify-lock` and `make build` to enforce this.
+6. Each data source must include a `README.md` which describes the data source and shows example usage.
+7. Each data source must include a `<data source name>-demo.py` demo notebook which details example usage.
+8. Each data source must include a `LICENSE.md` file approved by Databricks' legal team. Use open source subcomponents whenever possible. If proprietary components (e.g. external libraries) are required, provide a downloader method. Do not package proprietary components into data sources.
+9. Each data source must provide BYOL ("Bring Your Own Lineage"). This should distinguish the data sources from sources for other platforms.
 10. Each data source's capabilities should be summarized and added to the main `README.md` Add check marks for specific capabilities (e.g. :check:Read :check:Write :check:Readstream :check:Writestream)
-11. Each data source's compute requirements, environment requirements, and any limitations should be documented in its `README.md` and demo notebook. 
-12. All public methods should have Python docstrings. Format docstrings using the standards detailed in the [Google Python style guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings). 
-13. Error & Exception handling is critical. Exceptions must include a helpful message but must mask sensitive data (e.g. connection strings or credentials). 
+11. Each data source's compute requirements, environment requirements, and any limitations should be documented in its `README.md` and demo notebook.
+12. All public methods should have Python docstrings. Format docstrings using the standards detailed in the [Google Python style guide](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings).
+13. Error & Exception handling is critical. Exceptions must include a helpful message but must mask sensitive data (e.g. connection strings or credentials).
 14. All code must pass formatting and linting before it can be merged into the main repository. Run `make fmt` locally to validate code formatting.
 
 ### Adding a Data Source
@@ -35,7 +35,7 @@ To add a new data source (shortname `<source>`):
 1. Create `src/python_data_sources/<source>/` and add the data source implementation, along with `__init__.py`, `README.md`, and `LICENSE.md`.
 2. Create `tests/unit/<source>/` and add unit tests covering the implementation.
 3. Create `examples/<source>/` with a `<source>-demo` notebook, and `tests/e2e/<source>/` with an end-to-end notebook test that runs the demo in a Databricks workspace.
-4. In `pyproject.toml`, add a `<source>` entry to `[project.optional-dependencies]`, a `[tool.hatch.envs.test-<source>]` section declaring the module's dependencies, and a matching `[tool.hatch.envs.test-<source>.scripts]` section defining at least `test = "pytest tests/unit/<source> -v {args}"`.
+4. In `pyproject.toml`, add a `<source>` entry to `[project.optional-dependencies]` listing the module's runtime and test dependencies, then run `make lock-dependencies` to refresh `uv.lock`. Verify the matrix locally with `make test-module MODULE=<source>`.
 5. Add `<source>` to `ALLOWED_SUBMODULES` in `.github/scripts/detect_changed_submodules.sh` so the CI test matrix picks it up.
 6. Update `README.md` (capabilities table and data source summary) and `INSTALL.md` (install instructions for the new optional dependency group).
 
@@ -46,6 +46,7 @@ If you'd like to contribute to `python-data-sources`, please create a pull reque
 2. Clone your forked repository locally (`git clone <Your repository URL>`)
 3. Update from the main branch (`git checkout main && git pull`)
 4. Create a branch for your changes (`git checkout -b <Your feature name>`)
-5. Once your changes are finished, run `make fmt` in your IDE terminal and fix any reported issues
-6. Commit and push your changes (`git commit -S -a -m "<Description of the changes> && git push origin <Your feature name>`)
-7. Open your PR using the GitHub web UI or CLI
+5. Install development dependencies with `make dev` (uses [uv](https://docs.astral.sh/uv/))
+6. Once your changes are finished, run `make fmt` in your IDE terminal and fix any reported issues
+7. Commit and push your changes (`git commit -S -a -m "<Description of the changes> && git push origin <Your feature name>`)
+8. Open your PR using the GitHub web UI or CLI

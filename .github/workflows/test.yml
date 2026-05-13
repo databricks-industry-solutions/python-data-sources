@@ -11,20 +11,53 @@ permissions:
   contents: read
 
 jobs:
-  # NOTE: Ensures code is properly formatted
+  verify-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify uv.lock has no private registry URLs
+        run: make verify-lock
+
+  build-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+        with:
+          version: "0.11.2"
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: Build wheels with hash-pinned constraints
+        run: make build
+
   fmt:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
+        with:
+          version: "0.11.2"
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+
+      - name: Initialize the project
+        run: make dev
 
       - name: Format all files
-        run: make dev fmt
+        run: make fmt
 
       - name: Fail on differences
         run: git diff --exit-code
 
-  # NOTE: Detects newly created or modified data sources
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
@@ -33,13 +66,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
       - name: List changed directories
         id: detect
-        uses: sankichi92/list-changed-directories@1a7ce7073846c0f941d2d3dd7597974022907889
+        uses: sankichi92/list-changed-directories@1a7ce7073846c0f941d2d3dd7597974022907889 # v1.2.1
         with:
           target-file: __init__.py
           common-dependency-paths: |-
@@ -59,7 +92,6 @@ jobs:
           echo "Submodules to test: ${{ steps.check.outputs.submodules }}"
           echo "Has changes: ${{ steps.check.outputs.has-changes }}"
 
-  # NOTE: Runs tests of the created or modified data sources; Tests of unmodified data sources are skipped for convenience
   test:
     needs: detect-changes
     if: needs.detect-changes.outputs.has-changes == 'true'
@@ -71,74 +103,67 @@ jobs:
         submodule: ${{ fromJSON(needs.detect-changes.outputs.submodules) }}
         python-version: ['3.12']
 
+    env:
+      UV_PYTHON: "${{ matrix.python-version }}"
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+      - name: Setup uv
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
         with:
-          python-version: ${{ matrix.python-version }}
+          version: "0.11.2"
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
 
-      - name: Install Hatch
-        run: |
-          pip install --upgrade pip
-          pip install hatch
+      - name: Initialize the project
+        run: make dev
 
       - name: Run tests for ${{ matrix.submodule }}
         env:
           SUBMODULE: ${{ matrix.submodule }}
-        run: |
-          echo "Running tests for ${SUBMODULE}"
-          hatch run "test-${SUBMODULE}:test"
+        run: make test-module MODULE="${SUBMODULE}"
 
-  # NOTE: Runs all tests on push to the main branch
   test-all:
     needs: detect-changes
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.12']
+    env:
+      UV_PYTHON: "3.12"
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+      - name: Setup uv
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
         with:
-          python-version: ${{ matrix.python-version }}
+          version: "0.11.2"
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
 
-      - name: Install Hatch
-        run: |
-          pip install --upgrade pip
-          pip install hatch
+      - name: Initialize the project
+        run: make dev
 
       - name: Run all tests
-        run: |
-          echo "Running MCAP tests..."
-          hatch run test-mcap:test
-
-          echo "Running MQTT tests..."
-          hatch run test-mqtt:test
-
-          echo "Running ZipDCM tests..."
-          hatch run test-zipdcm:test
+        run: make test
 
   test-summary:
     needs: [detect-changes, test, test-all]
     if: always()
     runs-on: ubuntu-latest
+    env:
+      HAS_CHANGES: ${{ needs.detect-changes.outputs.has-changes }}
+      SUBMODULES: ${{ needs.detect-changes.outputs.submodules }}
 
     steps:
       - name: Check test results
         run: |
           echo "Test workflow completed"
-          echo "Changes detected: ${{ needs.detect-changes.outputs.has-changes }}"
-          echo "Submodules tested: ${{ needs.detect-changes.outputs.submodules }}"
+          echo "Changes detected: ${HAS_CHANGES}"
+          echo "Submodules tested: ${SUBMODULES}"
 
           if [ "${{ needs.test.result }}" = "failure" ] || [ "${{ needs.test-all.result }}" = "failure" ]; then
             echo "Some tests failed!"
@@ -147,32 +172,31 @@ jobs:
             echo "All tests passed!"
           fi
 
-  # NOTE: Tests any example notebooks in '/examples' by running them in a test workspace; Will not be run from forks (e.g. from external contributors)
   e2e:
     if: github.event_name == 'pull_request' && !github.event.pull_request.draft && !github.event.pull_request.head.repo.fork
     runs-on: ubuntu-latest
+
+    env:
+      UV_PYTHON: "3.12"
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+      - name: Setup uv
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098 # v7.3.1
         with:
-          cache: 'pip'
-          cache-dependency-path: '**/pyproject.toml'
-          python-version: '3.12'
+          version: "0.11.2"
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
 
-      - name: Install Hatch
-        run: |
-          pip install --upgrade pip
-          pip install hatch
+      - name: Initialize the project
+        run: make dev
 
       - name: Run e2e Tests
-        run: |
-          echo "Running e2e tests..."
-          hatch run test-all:e2e
+        run: make e2e
         env:
           REF_NAME: ${{ github.ref_name }}
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
