@@ -8,13 +8,12 @@ architecture and development guidelines outlined below.
 
 ## Project Overview
 
-This repository contains source code of Python data source (part of Apache Spark API) for
+This repository contains source code of Python data sources (part of Apache Spark API) for
 working with data in different external systems in batch and/or streaming manner.
 
-**Architecture**:  There is a separate directory for implementation of a data source for a specific external system. Inside it, simple, flat structure with one data source per file is preferred. Each data source implements:
-- `DataSource` base class with `name()`, `reader`, `streamReader`, `writer()`, and `streamWriter()` methods.
-- Separate writer classes for batch (`DataSourceWriter`, `DataSourceReader`) and streaming (`DataSourceStreamWriter`, `DataSourceStreamReader`).
-- Shared writer or reader logic in a common base class.
+**Architecture**:  All data sources live in a single package under `src/python_data_sources/`, with one subpackage per external system (e.g. `mcap/`, `mqtt/`, `zipdcm/`) and shared helpers in `common/`. Inside each subpackage a simple, flat structure with one data source per file is preferred.
+
+For the mechanics of the PySpark DataSource API itself — the `DataSource`, reader, writer, and streaming classes and how they fit together — follow the `spark-python-data-source` skill in the `ai-dev-kit` (linked below). This file only captures the conventions and workflow that are specific to *this* repository, so the API guidance is not duplicated here and can evolve independently in the skill.
 
 ### Documentation and examples of custom data sources using the same API
 
@@ -39,44 +38,20 @@ More information about Spark Python data sources could be found in the documenta
 - https://docs.databricks.com/aws/en/pyspark/datasources
 - https://spark.apache.org/docs/latest/api/python/tutorial/sql/python_data_source.html
 
+The guidance in this file is also available as a reusable Databricks skill in the `ai-dev-kit`:
+
+- https://github.com/databricks-solutions/ai-dev-kit/tree/main/databricks-skills/spark-python-data-source
+
 
 ## Architecture Patterns
 
 ### Data Source Implementation Pattern
 
-Most of data sources follows this structure (see [MsSentinel implementation](https://github.com/alexott/cyber-spark-data-connectors/blob/main/cyber_connectors/MsSentinel.py) as reference):
-
-1. **DataSource class**: Entry point, returns appropriate writers
-   - Implements `name()` class method (returns format name like "cassandra")
-   - Implements `writer()` for batch write operations
-   - Implements `streamWriter()` for streaming write operations
-   - Implements `reader()` for batch read operations
-   - Implements `streamReader()` for streaming read operations
-   - Implements `schema` to return a predefined schema for read operations (it could be automatically generated from the response, but it could be slower compared to predefined schema).
-
-2. **Base Writer class**: Shared write logic for batch and streaming
-   - Extracts and validates options in `__init__`
-   - Implements `write(iterator)` that processes rows and returns `SimpleCommitMessage`
-   - May batch records before sending (configurable via `batch_size` option)
-
-3. **Batch Writer class**: Inherits from base writer + `DataSourceWriter`
-   - No additional methods needed
-
-4. **Stream Writer class**: Inherits from base writer + `DataSourceStreamWriter`
-   - Implements `commit()` (handles successful batch completion)
-   - Implements `abort()` (handles failed batch)
-
-5. **Base Reader class**: Shared read logic for batch and streaming reads
-   - Extracts and validates base options in `__init__`
-   - Implements `partitions()` to distribute reads over multiple executors (if it's possible).  The custom class could be used to specify partition information (it should be inherited from `InputPartition`).
-   - Implements `read` to get data for a specific partition.
-
-6. **Batch Reader class**: Inherits from base reader + `DataSourceReader`.
-   - No additional methods needed
-
-7. **Stream Reader class**:  Inherits from base reader + `DataSourceStreamReader`.
-   - `initialOffset` - returns initial offset provided during the first initialization (or inferred automatically).  The offset class should implement `json` and `from_json` methods.
-   - `latestOffset` - returns the latest available offset.
+The full pattern for structuring a data source — the `DataSource` entry-point class, the
+shared base writer/reader, the batch and streaming subclasses, offsets, and partitions — is
+documented in the `spark-python-data-source` skill (see the link in "Project Overview").
+Implement new sources by following that skill; the sections below only add the repository's
+own conventions on top of it.
 
 ### Key Design Principles
 
@@ -88,29 +63,49 @@ Most of data sources follows this structure (see [MsSentinel implementation](htt
 
 ## Adding a New Data Source
 
+Each data source is a subpackage under `src/python_data_sources/` (see `mcap/`, `mqtt/`,
+and `zipdcm/` as templates), with its tests under `tests/unit/<source>/` and any demos
+under `examples/<source>/`. A typical layout is:
+
+```
+src/python_data_sources/yoursource/
+├── __init__.py               # exports the DataSource class (and readers/partitions)
+└── yoursource_datasource.py  # data source implementation
+tests/unit/yoursource/
+├── conftest.py               # fixtures
+└── test_yoursource.py        # unit tests
+examples/yoursource/          # optional notebooks / demo assets
+```
+
+Shared logic (e.g. `RangePartition`) lives in `src/python_data_sources/common/`.
+
 Follow this checklist (use existing sources as templates):
 
-1. Create a new folder with the project skeleton.
-2. Create new file `src/python_datasource_connectors/YourSource.py`
-3. Implement `YourSourceDataSource(DataSource)` with `name()`, `writer()`, `streamWriter()`
-4. Implement base writer class with:
+1. Create the subpackage `src/python_data_sources/yoursource/` with an `__init__.py`.
+2. Create the data source module (e.g. `yoursource_datasource.py`).
+3. Implement `YourSourceDataSource(DataSource)` with `name()`, `reader()`/`streamReader()`,
+   and `writer()`/`streamWriter()` as needed.
+4. Implement the base writer class with:
    - Options validation in `__init__`
    - `write(iterator)` method with write logic
 5. Implement batch and stream writer classes (minimal boilerplate)
-6. Implement base reader class with:
+6. Implement the base reader class with:
    - Options validation in `__init__`
    - `read(partition)` method with read logic
-   - `partitions(start, end)` method to split data into partitions
-7. Implement batch and stream writer classes (minimal boilerplate)
-8. Add exports to `python_datasource_connectors/__init__.py`
-9. Create test file `tests/test_yoursource.py` with unit tests
-10. Update `README.md` with usage examples and options
+   - `partitions(start, end)` method to split data into partitions (reuse
+     `common.range_partition.RangePartition` where it fits)
+7. Implement batch and stream reader classes (minimal boilerplate)
+8. Export the public classes from the subpackage's `__init__.py`
+9. Add the source's runtime dependencies as an extra in `pyproject.toml` under
+   `[project.optional-dependencies]`, then run `make lock-dependencies`
+10. Create unit tests under `tests/unit/yoursource/`
+11. Update the top-level `README.md` with usage examples and options
 
 ### Data Source Registration
 
 Users register data sources like this:
 ```python
-from dbx import ZipDCMDataSource
+from python_data_sources.zipdcm import ZipDCMDataSource
 spark.dataSource.register(ZipDCMDataSource)
 
 # Then use with .format("zipdcm")
@@ -146,7 +141,10 @@ df.read.format("zipdcm").option("...", "...").load()
 ### Implementation Rules
 
 1. **One concept per file**: Each module should have a single, clear purpose
-2. **Functions over classes**: Prefer functions unless you need state management
+2. **Minimal, flat classes**: The PySpark DataSource API is class-based — every source must
+   extend the base classes (`DataSource`, `DataSourceReader`/`DataSourceStreamReader`,
+   `DataSourceWriter`/`DataSourceStreamWriter`). Keep the hierarchy flat and the classes
+   thin; use plain functions for helper logic that does not need to hold state.
 3. **Direct SDK calls**: Call Databricks SDK directly, no wrapper layers
 4. **Simple data structures**: Use dicts and lists, avoid custom data classes
 5. **Basic testing**: Simple unit tests with basic mocking, no complex test frameworks
@@ -163,88 +161,85 @@ Before adding any code, ask yourself:
 
 ## Development Commands
 
-### Python Execution Rules
+The project uses [`uv`](https://docs.astral.sh/uv/) for packaging and a top-level `Makefile`
+that wraps the common workflows. Run these from the repository root and prefer the `make`
+targets over ad-hoc commands so behavior stays consistent.
 
-**CRITICAL: Always use `poetry run` instead of direct `python`:**
-```bash
-# ✅ CORRECT
-poetry run python script.py
-
-# ❌ WRONG
-python script.py
-```
+| Target | What it does |
+|--------|--------------|
+| `make dev` | Sync the environment with all extras (`uv sync --all-extras`) |
+| `make fmt` | Auto-format and fix (`ruff format`, `ruff check --fix`, `pylint`) |
+| `make lint` | Check formatting and lint without modifying files (`ruff` + `pylint`) |
+| `make test` | Run unit tests with coverage (`pytest tests/unit`) |
+| `make coverage` | Run unit tests and open the HTML coverage report |
+| `make e2e` | Run end-to-end tests (`pytest tests/e2e`) |
+| `make lock-dependencies` | Regenerate and sanitize `uv.lock` after changing dependencies |
+| `make clean` | Remove the virtualenv, build artifacts, and caches |
+| `make all` | Full local run (`clean` + `lint` + `fmt` + `test`) |
 
 ## Development Workflow
 
 ### Package Management
 
-- **Python**: Use `poetry add/remove` for dependencies, never edit `pyproject.toml` manually
-- Always check if dependencies already exist before adding new ones
-- **Principle**: Only add dependencies if absolutely critical
+- Dependencies are declared in `pyproject.toml`: core deps under `[project.dependencies]`,
+  per-source runtime deps as extras under `[project.optional-dependencies]` (`mcap`, `mqtt`,
+  `zipdcm`, `all`), and dev tooling under `[dependency-groups]`.
+- After editing dependencies, run `make lock-dependencies` to update `uv.lock`; never edit
+  the lockfile by hand.
+- Always check if a dependency already exists before adding a new one.
+- **Principle**: Only add dependencies if absolutely critical.
 
 ### Setup
 ```bash
-# Install dependencies (first time)
-poetry install
-
-# Activate environment
-. $(poetry env info -p)/bin/activate
+make dev             # uv sync --all-extras (creates .venv with all extras)
 ```
 
 ### Testing
 ```bash
-# Run all tests
-poetry run pytest
+# Run the full unit suite with coverage
+make test
 
-# Run specific test file
-poetry run pytest tests/test_ds.py
+# Run pytest directly for finer control (via uv)
+uv run pytest tests/unit                                          # all unit tests
+uv run pytest tests/unit/mcap                                     # one source
+uv run pytest tests/unit/mcap/test_mcap_datasource.py             # specific file
+uv run pytest tests/unit/mcap/test_mcap_datasource.py::test_name  # single test
+uv run pytest -v tests/unit                                       # verbose output
 
-# Run single test
-poetry run pytest tests/test_ds.py::TestXxxxDataSource::test_name
-
-# Run with verbose output
-poetry run pytest -v
-```
-
-### Building
-```bash
-# Build wheel package
-poetry build
-
-# Output will be in dist/ directory
+# Run tests for a single module via the Makefile helper
+make test-module MODULE=mcap
 ```
 
 ### Code Quality
 ```bash
-# Format and lint code (ruff)
-poetry run ruff check cyber_connectors/
-poetry run ruff format cyber_connectors/
+# Auto-format and apply fixes
+make fmt
 
-# Type checking
-poetry run mypy cyber_connectors/
+# Check only (used in CI) — ruff format --check, ruff check, pylint
+make lint
 ```
 
 ## Testing Guidelines
 
-- Tests use `pytest` with `pytest-spark` for Spark session fixtures
-- Mock external HTTP calls using `unittest.mock.patch`
-- Test writer initialization, option validation, and data processing logic
-- See `tests/test_ds.py` for comprehensive examples
+- Unit tests live in `tests/unit/<source>/`; end-to-end tests live in `tests/e2e/`
+- Tests use `pytest` (with `pytest-mock`/`pytest-cov`/`pytest-timeout`) and a local Spark session
+- Mock external calls (brokers, HTTP, SDK) using `unittest.mock` / `pytest-mock`
+- Test reader/writer initialization, option validation, and data processing logic
+- See existing suites such as `tests/unit/mcap/` and `tests/unit/mqtt/` for comprehensive examples
 
 **Test structure**:
-- Use fixtures for common setup (`basic_options`, `sample_schema`)
+- Put shared fixtures in a per-source `conftest.py` (see `tests/unit/mcap/conftest.py`)
 - Test data source name registration
-- Test writer instantiation (batch and streaming)
+- Test reader/writer instantiation (batch and streaming)
 - Test option validation (required vs optional parameters)
-- Mock HTTP responses to test write operations
+- Mock external responses to test read/write operations
 
 ## Important Notes
 
-- **Python version**: 3.10-3.13 (defined in `pyproject.toml`)
-- **Spark version**: 4.0.1+ required (PySpark DataSource API)
-- **Dependencies**: Keep minimal - only add if critically needed
-- **Never use direct `python` commands**: Always use `poetry run python`
-- **Ruff configuration**: Line length 120, enforces docstrings, isort, flake8-bugbear
+- **Python version**: 3.12–3.13 (`requires-python = ">=3.12,<3.14"` in `pyproject.toml`)
+- **Spark version**: 4.0+ required (PySpark DataSource API)
+- **Dependencies**: Keep minimal - only add if critically needed; declare them in `pyproject.toml`
+- **Code style**: `ruff` (format + lint, line length 120) and `pylint`, run via `make fmt` / `make lint`
 - **No premature optimization**: Focus on clarity over performance
 
 ## Summary: What Makes This Project "Senior Developer Approved"
