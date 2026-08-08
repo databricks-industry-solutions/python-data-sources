@@ -1,0 +1,41 @@
+{
+  "items": [
+    {
+      "items": [
+        {
+          "items": [
+            "reference/api/python_data_sources/common/range_partition"
+          ],
+          "label": "python_data_sources.common",
+          "type": "category"
+        },
+        {
+          "items": [
+            "reference/api/python_data_sources/mcap/mcap_datasource"
+          ],
+          "label": "python_data_sources.mcap",
+          "type": "category"
+        },
+        {
+          "items": [
+            "reference/api/python_data_sources/mqtt/mqtt_streaming"
+          ],
+          "label": "python_data_sources.mqtt",
+          "type": "category"
+        },
+        {
+          "items": [
+            "reference/api/python_data_sources/zipdcm/zip_dcm_ds",
+            "reference/api/python_data_sources/zipdcm/zip_dcm_utils"
+          ],
+          "label": "python_data_sources.zipdcm",
+          "type": "category"
+        }
+      ],
+      "label": "python_data_sources",
+      "type": "category"
+    }
+  ],
+  "label": "Reference",
+  "type": "category"
+}

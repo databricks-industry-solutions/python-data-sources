@@ -1,0 +1,55 @@
+---
+sidebar_position: 2
+---
+
+import Admonition from '@theme/Admonition';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Installation
+
+Data sources can be installed from PyPI using `pip` commands. Each data source is packaged as an optional extra module. You can 
+limit installation of data sources and their dependencies to only the sources you need.
+
+<Admonition type="info" title="Required Dependencies">
+Installing Python Data Sources from this library requires Spark 4.0+. Each data source includes its required Python dependencies.
+</Admonition>
+
+## Installing data sources
+
+List required data sources when installing using `pip` commands.
+
+```bash
+pip install "python-data-sources[mcap]"       # MCAP robotics logs
+pip install "python-data-sources[mqtt]"       # MQTT streaming
+pip install "python-data-sources[zipdcm]"     # DICOM in ZIP
+pip install "python-data-sources[mcap,mqtt]"  # Both MCAP and MQTT
+pip install "python-data-sources[all]"        # Installs all data sources
+```
+
+<Admonition type="tip" title="Install only required sources">
+Each data source requires its own dependencies. Because new data sources may be added to the project over time, it is best to
+limit installation to sources required for your workloads.
+</Admonition>
+
+## Registering data sources
+
+Data sources must be registered to be used in an active `SparkSession`. Once data sources are registered, you can reference them
+using their data source name (e.g. "mcap" for the MCAP data source). See the [API reference](/docs/reference) for the full list of 
+registered data sources and their options.
+
+```python
+from pyspark.sql import SparkSession
+from python_data_sources.mcap import McapDataSource
+
+# Register the data source
+spark = SparkSession.builder.getOrCreate()
+spark.dataSource.register(McapDataSource)
+
+# Get the data source name
+mcap_source_name = McapDataSource.name()  # 'mcap'
+
+# Read MCAP data using the registered data source
+df = spark.read.format("mcap").load("/path/to/logs/")
+df.show()
+```

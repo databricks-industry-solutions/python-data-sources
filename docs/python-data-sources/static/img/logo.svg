@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Placeholder logo: stylized data-source cylinder. Replace with project artwork. -->
+  <ellipse cx="32" cy="14" rx="20" ry="6" fill="#FF3621"/>
+  <path d="M12 14v18c0 3.3 9 6 20 6s20-2.7 20-6V14" stroke="#FF3621" stroke-width="3" fill="none"/>
+  <path d="M12 32v18c0 3.3 9 6 20 6s20-2.7 20-6V32" stroke="#FF3621" stroke-width="3" fill="none"/>
+  <ellipse cx="32" cy="32" rx="20" ry="6" stroke="#FF3621" stroke-width="3" fill="none"/>
+</svg>

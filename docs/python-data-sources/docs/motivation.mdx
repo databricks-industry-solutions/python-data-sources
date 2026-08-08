@@ -1,0 +1,25 @@
+---
+sidebar_position: 1
+---
+
+# Motivation
+
+Apache Spark ships native data sources commonly used in analytics workloads. The long tail of data sources is not covered by 
+standard Spark capabilities and is served by a patchwork of Java libraries or user-defined functions that are difficult to maintain.
+
+The [PySpark DataSource API](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/datasource.html) allows users to implement and register Spark data source formats using `spark.read.format(...)`. 
+Sources that implement `DataSourceReader` and `DataSourceWriter` contracts can be used to read or write data with Spark.
+
+**python-data-sources** is a collection of Python-native connectors for formats and protocols that don't have a built-in Spark reader.
+
+## Connectors
+
+| Connector | Read | Write  | Notes                                                          |
+|-----------|------|--------|----------------------------------------------------------------|
+| `mcap`    | ✓    | —      | MCAP container format used for robotics, AV, and ROS bag logs. |
+| `mqtt`    | ✓    | —      | MQTT broker as a Structured Streaming source.                  |
+| `zipdcm`  | ✓    | —      | DICOM medical images packaged inside ZIP archives.             |
+
+## Contributing
+
+If you need a connector that isn't provided as a Python Data Source, [open a GitHub issue](https://github.com/databricks-industry-solutions/python-data-sources/issues).
